@@ -2,3 +2,5 @@
 *.log
 .direnv/
 .devenv/
+result
+result-*
