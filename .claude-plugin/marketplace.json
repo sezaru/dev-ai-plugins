@@ -1,0 +1,18 @@
+{
+  "name": "dev-ai-plugins",
+  "owner": {
+    "name": "Eduardo Barreto Alexandre",
+    "email": "claude@sezdm.com"
+  },
+  "metadata": {
+    "description": "Private marketplace of internal development plugins (mobile, backend, ...).",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "mobile-dev",
+      "source": "./plugins/mobile-dev",
+      "description": "Flutter-based iOS & Android app development: skills, code guidelines, and MCP servers."
+    }
+  ]
+}
