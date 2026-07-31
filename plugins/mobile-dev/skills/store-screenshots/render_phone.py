@@ -60,6 +60,9 @@ def main():
     p.add_argument("--out", required=True, help="output PNG (transparent)")
     p.add_argument("--yaw", type=float, default=0, help="orbit degrees about the vertical axis")
     p.add_argument("--pitch", type=float, default=0, help="orbit degrees about the horizontal axis")
+    p.add_argument("--orient", choices=("portrait", "landscape"), default="portrait",
+                   help="device orientation (landscape rolls it 90° — for tablets); feed a "
+                        "landscape screenshot when using landscape")
     p.add_argument("--width", type=int, default=1290)
     p.add_argument("--height", type=int, default=2796)
     args = p.parse_args()
@@ -70,7 +73,7 @@ def main():
     chromium = find_chromium()
 
     q = (f"?model={file_url(model)}&shot={file_url(args.screenshot)}"
-         f"&yaw={args.yaw}&pitch={args.pitch}&bg=none")
+         f"&yaw={args.yaw}&pitch={args.pitch}&orient={args.orient}&bg=none")
     url = file_url(TEMPLATE) + q
     cdp_shot.capture(chromium, url, os.path.abspath(args.out),
                      args.width, args.height, transparent=True)

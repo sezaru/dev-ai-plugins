@@ -1,0 +1,11 @@
+Model Information:
+* title:	IPad Mini 6 2021
+* source:	https://sketchfab.com/3d-models/ipad-mini-6-2021-f363c2b1c74a462588db184bd4fb024e
+* author:	DatSketch (https://sketchfab.com/DatSketch)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "IPad Mini 6 2021" (https://sketchfab.com/3d-models/ipad-mini-6-2021-f363c2b1c74a462588db184bd4fb024e) by DatSketch (https://sketchfab.com/DatSketch) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

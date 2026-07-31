@@ -73,23 +73,45 @@ SKILL_DIR="<absolute path to this skill directory>"
 python3 "$SKILL_DIR/render_phone.py" raw/01.png --model iphone-12-pro --out shots/phone-01.png
 # angled hero shot:
 python3 "$SKILL_DIR/render_phone.py" raw/01.png --model s21-ultra --yaw 18 --pitch -6 --out shots/phone-01.png
+# tablet, landscape (feed a landscape screenshot):
+python3 "$SKILL_DIR/render_phone.py" raw/01.png --model ipad-pro-12-9 --orient landscape \
+  --out shots/phone-01.png --width 2732 --height 2048
 ```
 
-- **Models** (`--model`, both CC-BY-4.0, commercial-OK, credit required — see
-  `assets/models/NOTICE.md`): `iphone-12-pro` (iOS), `s21-ultra` (Android). Match the
-  device to the target store. `--model` also takes a path to any `scene.gltf/.glb` with a
-  separable screen mesh.
+- **Models** (`--model`) — all bundled, all CC-BY-4.0, commercial-OK, **credit required**
+  (see `assets/models/NOTICE.md`). **Present this menu to the user and let them pick** the
+  device for the set (match it to the target store):
+
+  | `--model` | Device | Store |
+  |-----------|--------|-------|
+  | `iphone-12-pro` | iPhone 12 Pro | App Store (phone) |
+  | `s21-ultra` | Samsung Galaxy S21 Ultra | Google Play (phone) |
+  | `ipad-pro-12-9` | iPad Pro 12.9" (2020) | App Store (tablet) |
+  | `ipad-mini-6` | iPad Mini 6 (2021) | tablet (compact) |
+
+  `--model` also takes a path to any `scene.gltf/.glb` with a separable screen mesh (the
+  orient/mirror/framing are all auto-detected, so most models "just work").
+- **`--orient portrait|landscape`** (default `portrait`): `landscape` rolls the device 90°
+  — for tablet shots held sideways. **Feed a landscape screenshot** and use landscape
+  `--width`/`--height` (e.g. 2732×2048). Phones are almost always portrait.
 - **`--yaw` / `--pitch`** (degrees, default 0 = head-on): orbit the camera for a
   dynamic angle. Use head-on for the hero/first screenshot (max readability); vary
   yaw/pitch across the set (e.g. ±15–20° yaw, small pitch) for rhythm. Keep angles
   modest so text stays legible.
-- Output is a transparent, centred phone at `--width`×`--height` (default 1290×2796).
+- Output is a transparent, centred device at `--width`×`--height` (default 1290×2796).
+  The device is auto-framed to fill the width of whatever size you pass.
 
 ### B. Author the stage & composite (`render.py`)
 
-Write a `.stage` fragment using the classes in `design/base.css` (see
-`templates/example.html`). Only the *content* changes per screenshot — the shared
-stylesheet keeps the whole SET consistent.
+Write a `.stage` fragment using the classes in `design/base.css`. Only the *content*
+changes per screenshot — the shared stylesheet keeps the whole SET consistent. Start from
+the template matching the target device (base.css is tuned for the tall iPhone canvas, so
+the others carry a `<style>` block that scales the system to their canvas):
+
+- `templates/example.html` — iPhone / App Store phone (1290×2796)
+- `templates/example-android.html` — Google Play phone (1080×2160)
+- `templates/example-ipad.html` — iPad portrait (2048×2732)
+- `templates/example-ipad-landscape.html` — iPad landscape (2732×2048)
 
 - Set the brand palette once, on every stage, so all screenshots match:
   `<div class="stage" style="--bg-a:#0a1a44; --bg-c:#1e50d8; --accent:#34d399;">`
@@ -116,17 +138,22 @@ feedback, **edit the HTML/CSS (or re-run step A with a different angle), and re-
 
 ### Dimensions
 
-| Store | Device | Portrait (W×H) |
-|-------|--------|----------------|
-| App Store | iPhone 6.9" | 1320 × 2868 |
-| App Store | iPhone 6.7" (default) | 1290 × 2796 |
-| App Store | iPhone 6.5" | 1242 × 2688 |
-| Google Play | Phone (recommended) | **1080 × 2160** (2:1) |
-| Google Play | Phone (16:9) | 1080 × 1920 |
+| Store | Device | Portrait (W×H) | Model |
+|-------|--------|----------------|-------|
+| App Store | iPhone 6.9" | 1320 × 2868 | `iphone-12-pro` |
+| App Store | iPhone 6.7" (default) | 1290 × 2796 | `iphone-12-pro` |
+| App Store | iPhone 6.5" | 1242 × 2688 | `iphone-12-pro` |
+| App Store | iPad 13" | 2064 × 2752 | `ipad-pro-12-9` |
+| App Store | iPad 12.9" | 2048 × 2732 | `ipad-pro-12-9` |
+| Google Play | Phone (recommended) | **1080 × 2160** (2:1) | `s21-ultra` |
+| Google Play | Phone (16:9) | 1080 × 1920 | `s21-ultra` |
+| Google Play | Tablet | 2048 × 2732 | `ipad-mini-6` / `ipad-pro-12-9` |
+
+For **landscape** iPad shots, swap W×H (e.g. iPad 12.9" → 2732 × 2048) and pass
+`--orient landscape` to `render_phone.py` with a landscape screenshot.
 
 Pass the matching `--width`/`--height` to **both** `render_phone.py` and `render.py` so
-the phone render and the stage share the exact target size. For Play Store, use
-`--model s21-ultra` (Android); for the App Store, `--model iphone-12-pro`.
+the device render and the stage share the exact target size.
 
 `render_phone.py` frames the phone to **fill the width** of whatever canvas size you
 give it, so the device looks consistently large across stores. Play caps the aspect

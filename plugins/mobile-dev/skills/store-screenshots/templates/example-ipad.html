@@ -1,0 +1,33 @@
+<!-- App Store iPad — PORTRAIT. Render at 2048x2732 (12.9"/13" iPad, App Store's iPad
+     slot). base.css is tuned for the 1290-wide iPhone canvas, so this <style> block scales
+     the design system up for the larger tablet canvas. Make the phone first:
+       render_phone.py raw.png --model ipad-pro-12-9 --out phone.png --width 2048 --height 2732
+     (add --yaw/--pitch for an angled hero) then render this stage with matching
+     --width 2048 --height 2732. Use --model ipad-mini-6 for the smaller tablet. -->
+<style>
+  .kicker{top:130px;} .kicker span{font-size:42px;padding:20px 46px;letter-spacing:7px;}
+  h1{top:250px;font-size:320px;letter-spacing:-10px;}
+  h2{top:880px;font-size:118px;left:150px;right:150px;}
+  .phone{top:1160px;width:1640px;filter:drop-shadow(0 70px 130px rgba(0,0,0,.55));}
+  .badge{font-size:56px;padding:26px 44px;border-radius:30px;}
+  .breakout{left:230px;right:230px;padding:64px 72px;border-radius:56px;}
+  .breakout .lbl{font-size:46px;} .breakout .val{font-size:150px;margin-top:10px;}
+  .breakout .pill{font-size:48px;margin-top:30px;padding:18px 38px;}
+  .breakout .spark{width:360px;height:132px;right:72px;top:82px;}
+</style>
+<div class="stage" style="--bg-a:#0a1a44; --bg-c:#1e50d8; --accent:#34d399;">
+  <div class="kicker"><span>YOUR TAGLINE</span></div>
+  <h1>VERB</h1>
+  <h2>THE <span class="accent">BENEFIT</span></h2>
+
+  <div class="phone"><img src="phone-01.png"></div>
+
+  <div class="badge" style="top:1980px; right:240px;">supporting callout</div>
+
+  <div class="breakout" style="top:2340px;">
+    <div class="lbl">Metric label</div>
+    <div class="val">$12,480</div>
+    <div class="pill">▲ +8.2% this week</div>
+    <svg class="spark" viewBox="0 0 320 120"><polyline points="0,98 48,84 96,92 148,58 198,68 250,30 320,20"/></svg>
+  </div>
+</div>

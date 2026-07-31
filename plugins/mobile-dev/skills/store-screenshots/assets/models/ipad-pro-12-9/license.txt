@@ -1,0 +1,11 @@
+Model Information:
+* title:	Ipad Pro 12.9 (2020)
+* source:	https://sketchfab.com/3d-models/ipad-pro-129-2020-f0f7674522124f3bbc2d0f898963457e
+* author:	Konstantin Koretskyi (https://sketchfab.com/cgnoobmaster)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Ipad Pro 12.9 (2020)" (https://sketchfab.com/3d-models/ipad-pro-129-2020-f0f7674522124f3bbc2d0f898963457e) by Konstantin Koretskyi (https://sketchfab.com/cgnoobmaster) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

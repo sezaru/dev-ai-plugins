@@ -1,0 +1,34 @@
+<!-- App Store iPad — LANDSCAPE. Render at 2732x2048 (12.9"/13" iPad, landscape). Feed a
+     LANDSCAPE app screenshot and pass --orient landscape so the device is rolled 90° and
+     the shot reads upright. Make the phone first:
+       render_phone.py raw-landscape.png --model ipad-pro-12-9 --orient landscape \
+         --out phone.png --width 2732 --height 2048
+     then render this stage with matching --width 2732 --height 2048. base.css is tuned for
+     the tall iPhone canvas, so this <style> block scales it for the wide/short tablet. -->
+<style>
+  .kicker{top:80px;} .kicker span{font-size:40px;padding:18px 44px;letter-spacing:7px;}
+  h1{top:150px;font-size:230px;letter-spacing:-8px;}
+  h2{top:500px;font-size:94px;left:260px;right:260px;}
+  .phone{top:640px;width:2040px;filter:drop-shadow(0 60px 120px rgba(0,0,0,.55));}
+  .badge{font-size:52px;padding:24px 42px;border-radius:28px;}
+  .breakout{left:440px;right:440px;padding:56px 66px;border-radius:52px;}
+  .breakout .lbl{font-size:42px;} .breakout .val{font-size:132px;margin-top:8px;}
+  .breakout .pill{font-size:44px;margin-top:26px;padding:16px 34px;}
+  .breakout .spark{width:320px;height:118px;right:66px;top:72px;}
+</style>
+<div class="stage" style="--bg-a:#0a1a44; --bg-c:#1e50d8; --accent:#34d399;">
+  <div class="kicker"><span>YOUR TAGLINE</span></div>
+  <h1>VERB</h1>
+  <h2>THE <span class="accent">BENEFIT</span></h2>
+
+  <div class="phone"><img src="phone-01.png"></div>
+
+  <div class="badge" style="top:1560px; right:360px;">supporting callout</div>
+
+  <div class="breakout" style="top:1720px;">
+    <div class="lbl">Metric label</div>
+    <div class="val">$12,480</div>
+    <div class="pill">▲ +8.2% this week</div>
+    <svg class="spark" viewBox="0 0 320 120"><polyline points="0,98 48,84 96,92 148,58 198,68 250,30 320,20"/></svg>
+  </div>
+</div>
