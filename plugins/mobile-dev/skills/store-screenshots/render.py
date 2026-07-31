@@ -91,14 +91,31 @@ def render(chromium, fragment_path, out_path, w, h):
         full = os.path.join(td, "page.html")
         with open(full, "w") as f:
             f.write(doc)
+        # Fully isolate chromium from the user's environment: a throwaway profile AND a
+        # fresh HOME/XDG so nothing is read from or written to ~/.config, ~/.cache, etc.,
+        # and there is never a clash with a running chromium. All state lives in this
+        # temp dir and is deleted on exit.
+        for sub in ("home", ".config", ".cache", ".local", "profile", "cache", "crash"):
+            os.makedirs(os.path.join(td, sub), exist_ok=True)
+        env = dict(os.environ)
+        env.update({
+            "HOME": os.path.join(td, "home"),
+            "XDG_CONFIG_HOME": os.path.join(td, ".config"),
+            "XDG_CACHE_HOME": os.path.join(td, ".cache"),
+            "XDG_DATA_HOME": os.path.join(td, ".local"),
+        })
         cmd = [
             chromium, "--headless=new", "--no-sandbox", "--disable-gpu",
             "--disable-dev-shm-usage", "--hide-scrollbars",
+            "--no-first-run", "--no-default-browser-check",
+            "--disable-extensions", "--disable-sync",
             "--force-device-scale-factor=1", f"--window-size={w},{h}",
             f"--user-data-dir={os.path.join(td, 'profile')}",
+            f"--disk-cache-dir={os.path.join(td, 'cache')}",
+            f"--crash-dumps-dir={os.path.join(td, 'crash')}",
             f"--screenshot={out_path}", full,
         ]
-        r = subprocess.run(cmd, capture_output=True, text=True)
+        r = subprocess.run(cmd, capture_output=True, text=True, env=env)
         if not os.path.isfile(out_path):
             sys.exit(f"Render failed for {fragment_path}:\n{r.stderr[-800:]}")
 
