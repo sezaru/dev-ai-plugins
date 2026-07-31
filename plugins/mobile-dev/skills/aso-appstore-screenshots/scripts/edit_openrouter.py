@@ -2,9 +2,10 @@
 """
 OpenRouter image-edit adapter for the ASO screenshots skill.
 
-Replaces the Gemini-MCP `edit_image` tool: sends one or more input images plus a
-text instruction to an image-capable model on OpenRouter, generates N variations
-concurrently, then crops+resizes each to exact App Store Connect dimensions.
+Replaces the Gemini-MCP `edit_image` tool: sends one or more reference images plus a
+text instruction to an image-capable model via OpenRouter's dedicated images endpoint
+(POST /api/v1/images), generates N variations concurrently, then crops+resizes each to
+exact App Store Connect dimensions.
 
 Env:
   OPENROUTER_API_KEY   required — your OpenRouter key
@@ -30,7 +31,9 @@ import urllib.request
 
 from PIL import Image
 
-API_URL = "https://openrouter.ai/api/v1/chat/completions"
+API_URL = "https://openrouter.ai/api/v1/images"
+# Image-in/image-out models confirmed on OpenRouter. Default is cheap + capable;
+# google/gemini-3-pro-image ("Nano Banana Pro") is the higher-quality option.
 DEFAULT_MODEL = "google/gemini-2.5-flash-image"  # override via --model / OPENROUTER_MODEL
 REQUEST_TIMEOUT = 240
 
@@ -42,55 +45,41 @@ def data_url(path):
     return f"data:{mime};base64,{b64}"
 
 
-def build_body(model, prompt, image_paths):
-    content = [{"type": "text", "text": prompt}]
-    for p in image_paths:
-        content.append({"type": "image_url", "image_url": {"url": data_url(p)}})
+def build_body(model, prompt, image_paths, n=1):
     return {
         "model": model,
-        "modalities": ["image", "text"],
-        "messages": [{"role": "user", "content": content}],
+        "prompt": prompt,
+        "n": n,
+        "input_references": [
+            {"type": "image_url", "image_url": {"url": data_url(p)}}
+            for p in image_paths
+        ],
     }
 
 
 def extract_image_bytes(resp_json):
-    """Pull the first returned image out of an OpenRouter chat-completion response.
+    """Pull the first returned image out of a /api/v1/images response.
 
-    Handles the documented shape (message.images[].image_url.url) plus a couple of
-    defensive fallbacks, since image output is a newer OpenRouter surface.
+    Documented shape: {"data": [{"b64_json": "...", "media_type": "image/png"}]}.
+    Falls back to a url field if a provider returns one instead of base64.
     """
-    try:
-        msg = resp_json["choices"][0]["message"]
-    except (KeyError, IndexError, TypeError):
-        raise RuntimeError(f"Unexpected response: {json.dumps(resp_json)[:800]}")
+    data = resp_json.get("data")
+    if not isinstance(data, list) or not data:
+        raise RuntimeError(f"No image in response: {json.dumps(resp_json)[:800]}")
 
-    candidates = []
-    imgs = msg.get("images")
-    if isinstance(imgs, list):
-        for it in imgs:
-            url = (it.get("image_url") or {}).get("url") if isinstance(it, dict) else None
-            if url:
-                candidates.append(url)
-    # Fallback: image parts embedded in a structured content array.
-    if not candidates and isinstance(msg.get("content"), list):
-        for part in msg["content"]:
-            if isinstance(part, dict) and part.get("type") == "image_url":
-                url = (part.get("image_url") or {}).get("url")
-                if url:
-                    candidates.append(url)
+    item = data[0]
+    b64 = item.get("b64_json")
+    if b64:
+        return base64.b64decode(b64)
 
-    if not candidates:
-        raise RuntimeError(
-            "No image in response — the model may not support image output. "
-            f"Response head: {json.dumps(resp_json)[:800]}"
-        )
+    url = item.get("url") or (item.get("image_url") or {}).get("url")
+    if url:
+        if url.startswith("data:"):
+            return base64.b64decode(url.split(",", 1)[1])
+        with urllib.request.urlopen(url, timeout=REQUEST_TIMEOUT) as r:
+            return r.read()
 
-    url = candidates[0]
-    if url.startswith("data:"):
-        return base64.b64decode(url.split(",", 1)[1])
-    # Remote URL — fetch it.
-    with urllib.request.urlopen(url, timeout=REQUEST_TIMEOUT) as r:
-        return r.read()
+    raise RuntimeError(f"No b64_json/url in data item: {json.dumps(item)[:400]}")
 
 
 def call_openrouter(api_key, body):
