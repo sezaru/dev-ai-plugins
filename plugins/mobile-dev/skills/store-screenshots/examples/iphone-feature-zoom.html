@@ -1,0 +1,32 @@
+<!-- EXAMPLE (not a template). Archetype: FEATURE ZOOM — a single UI insight recreated LARGE
+     as the hero (bigger/clearer than it is in-app), device peeking in from the bottom-right,
+     copy anchored bottom. Deliberately a different look from bold-benefit: light/warm palette,
+     different type rhythm, off-centre device — to show the set is NOT one layout. 1290x2796. -->
+<style>
+  .stage{background:linear-gradient(160deg,#fdf6ec 0%,#fbe4d6 100%);font-family:var(--font-body);color:#1c1917;}
+  .dev{position:absolute;bottom:-120px;right:-220px;width:1000px;transform:rotate(8deg);
+       filter:drop-shadow(0 50px 100px rgba(120,53,15,.28));}
+  .dev img{width:100%;display:block;}
+  .card{position:absolute;top:150px;left:80px;right:80px;background:#fff;border-radius:56px;
+        padding:70px 76px;box-shadow:0 50px 110px rgba(120,53,15,.18);}
+  .card .l{font-size:44px;color:#78716c;font-weight:600;}
+  .card .v{font-family:var(--font-display);font-weight:900;font-size:200px;line-height:.95;
+          letter-spacing:-6px;color:#0f766e;margin-top:4px;}
+  .card .bar{display:flex;gap:16px;align-items:flex-end;height:200px;margin-top:44px;}
+  .card .bar span{flex:1;background:#99f6e4;border-radius:16px 16px 0 0;}
+  .card .bar span:nth-child(4){background:#14b8a6;} .card .bar span:nth-child(7){background:#0f766e;}
+  .head{position:absolute;bottom:520px;left:80px;right:360px;
+        font-family:var(--font-display);font-weight:900;font-size:150px;line-height:.92;
+        letter-spacing:-4px;color:#1c1917;}
+  .sub{position:absolute;bottom:400px;left:82px;right:420px;font-size:52px;color:#57534e;line-height:1.15;}
+</style>
+<div class="stage">
+  <div class="card">
+    <div class="l">Saved this year</div>
+    <div class="v">$6,120</div>
+    <div class="bar"><span style="height:40%"></span><span style="height:55%"></span><span style="height:48%"></span><span style="height:72%"></span><span style="height:60%"></span><span style="height:85%"></span><span style="height:100%"></span></div>
+  </div>
+  <div class="dev"><img src="_device-front.png"></div>
+  <div class="head">WATCH<br>SAVINGS ADD UP</div>
+  <div class="sub">Automatic round-ups turn spare change into real money.</div>
+</div>

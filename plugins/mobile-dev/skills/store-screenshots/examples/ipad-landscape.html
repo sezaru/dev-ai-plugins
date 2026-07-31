@@ -1,0 +1,33 @@
+<!-- EXAMPLE (not a template). Archetype: CONTEXT / LIFESTYLE on a tablet — copy on one side,
+     the angled landscape device filling the other, a supporting proof line. 2732x2048 (iPad
+     13"/12.9" landscape). Render the device with --orient landscape and a LANDSCAPE screenshot.
+     A third distinct look again: split composition, left-aligned, wide canvas. -->
+<style>
+  .stage{background:radial-gradient(1600px 1200px at 105% 110%,#4f46e5 0%,transparent 50%),
+                    linear-gradient(120deg,#0b1220 0%,#1e293b 100%);
+         font-family:var(--font-body);color:#fff;}
+  .copy{position:absolute;top:300px;left:180px;width:1080px;}
+  .kick{font-weight:700;letter-spacing:7px;font-size:44px;color:#a5b4fc;text-transform:uppercase;}
+  .head{font-family:var(--font-display);font-weight:900;font-size:200px;line-height:.92;
+        letter-spacing:-5px;margin-top:34px;}
+  .head em{font-style:normal;color:#818cf8;}
+  .sub{font-size:58px;line-height:1.25;color:#cbd5e1;margin-top:44px;width:900px;}
+  .proof{position:absolute;bottom:220px;left:184px;display:flex;gap:80px;}
+  .proof .n{font-family:var(--font-display);font-weight:900;font-size:110px;line-height:1;}
+  .proof .l{font-size:40px;color:#94a3b8;margin-top:10px;}
+  .dev{position:absolute;top:230px;right:-360px;width:2360px;
+       filter:drop-shadow(0 70px 130px rgba(0,0,0,.6));}
+  .dev img{width:100%;display:block;}
+</style>
+<div class="stage">
+  <div class="dev"><img src="_device-ipad-land.png"></div>
+  <div class="copy">
+    <div class="kick">Everything in one place</div>
+    <div class="head">YOUR WHOLE <em>NET WORTH</em></div>
+    <div class="sub">Accounts, cash and investments — tracked together, updated live.</div>
+  </div>
+  <div class="proof">
+    <div><div class="n">3.2M</div><div class="l">people tracking</div></div>
+    <div><div class="n">4.9★</div><div class="l">App Store</div></div>
+  </div>
+</div>

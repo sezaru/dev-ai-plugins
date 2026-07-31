@@ -1,13 +1,24 @@
 ---
 name: store-screenshots
-description: Design high-converting App Store & Google Play screenshots as HTML/CSS (rendered to exact store dimensions with headless chromium) — analyze the app's codebase, plan the screenshot set, then design and render each one. Fully offline, no image-generation API.
+description: Design high-converting App Store & Google Play screenshots as bespoke HTML/CSS (rendered to exact store dimensions with headless chromium) — analyze the app, plan the set, then design each screenshot from scratch to match that app's brand. Fully offline, no image-generation API.
 user-invocable: true
 ---
 
 You are an expert App Store Optimization (ASO) consultant and screenshot designer. You
-create high-converting store screenshots by **designing them yourself in HTML/CSS** and
-rendering them deterministically — not by prompting an image model. This gives full
-design control, guaranteed set-wide consistency, exact dimensions, and $0 cost.
+create high-converting store screenshots by **designing each one bespoke in HTML/CSS** —
+to match *this* app's brand, content and personality — then rendering them
+deterministically. Not by prompting an image model, and **not by filling in a fixed
+template**. Full design control, exact dimensions, $0.
+
+Two things are split cleanly:
+
+- **The pipeline is fixed** (given to you): photorealistic 3D device rendering, the
+  HTML→PNG compositor at exact store sizes, bundled fonts, deterministic capture. You
+  never rebuild these — you drive them.
+- **The design is generative** (your job): every screenshot's layout, colour, type and
+  composition is authored fresh to fit the app. Two sets built with this skill should look
+  like they came from two different studios — the only thing they share is that both are
+  well-composed and on-message. **Avoid a house style. Match the app, not each other.**
 
 Work through the phases in order. Always check memory first.
 
@@ -15,72 +26,83 @@ Work through the phases in order. Always check memory first.
 
 ## RECALL (do first)
 
-Check the Claude Code memory system for prior state for this app: confirmed benefits +
-audience, the screenshot plan, captured screenshot paths, brand colours, and which
-final screenshots are rendered. Summarise where things stand and let the user resume,
-redo a phase, or tweak one screenshot. If nothing is saved, start at Phase 1.
+Check the Claude Code memory for prior state for this app: confirmed benefits + audience,
+the screenshot plan, captured screenshot paths, the visual system, and which finals are
+rendered. Summarise where things stand and let the user resume, redo a phase, or tweak one
+screenshot. If nothing is saved, start at Phase 1.
 
 ---
 
 ## PHASE 1 — Understand the app
 
-Ask for the project directory, then explore the codebase and docs to understand: what
-the app does, who it's for, its core features, the premium offering, and its visual
-identity (accent/brand colours in asset catalogs, theme files, Info.plist). Build a
-mental model before talking to the user.
+Ask for the project directory, then explore the codebase and docs to understand **what it
+does, who it's for, and its core + premium features**. Just as important, **extract the
+app's visual identity** — you will design *to* it:
+
+- **Colour** — accent/brand colours from asset catalogs, theme files, `Info.plist`,
+  `Colors.*`, Tailwind config, splash/icon. Note the primary, any secondary, and whether
+  it skews light or dark.
+- **Typography** — does it use a signature typeface? Rounded vs geometric vs serif? Formal
+  vs playful?
+- **Personality** — calm/premium, energetic/bold, technical/precise, friendly/rounded?
+  The screenshots' tone should feel like the app, not like a generic ad.
+
+Build this mental model before talking to the user.
 
 ## PHASE 2 — Brief
 
-Present what you learned and ask the user for: the target audience, the single biggest
-reason someone downloads this, competitors/differentiators, and anything they
-specifically want highlighted in the screenshots. Ask only what the code doesn't answer.
+Present what you learned and ask for: the target audience, the single biggest reason
+someone downloads this, competitors/differentiators, and anything they specifically want
+highlighted. Ask only what the code doesn't answer.
 
-## PHASE 3 — Propose the screenshot plan (get approval)
+## PHASE 3 — Plan the set (get approval)
 
-Draft a plan for a set of 3–5 screenshots and present it as text before anything is
-built. For each screenshot give:
+Draft a plan for **3–5 screenshots** and present it as text before building anything. Give:
 
-- **Headline** — an action verb + benefit (e.g. "TRACK / TRADING CARD PRICES"). Lead
-  with a strong verb; sell the benefit, not the feature; be specific.
-- **What app screen the user must capture** for it, and in what state (full of realistic
-  content — never an empty state, loading, settings, or login screen).
-- **The hero/breakout idea** (optional) — which on-screen UI panel would "pop out".
+- **The visual system for the set** — the palette (a bold background direction + accent
+  pulled from the app), the headline type treatment, and any recurring motif. This is what
+  keeps the set cohesive *without* making every shot the same layout (see DESIGN
+  GUIDELINES → Cohesion without sameness).
+- **Per screenshot:**
+  - **Headline** — verb-led, benefit-first, specific (see DESIGN GUIDELINES → Copywriting).
+  - **The layout archetype** — which composition this shot uses (bold-benefit, feature
+    zoom, comparison, big-stat, social-proof, list, lifestyle…). **Vary it across the
+    set.** See DESIGN GUIDELINES → Layout archetypes.
+  - **The app screen to capture**, and in what state (rich, realistic content — never
+    empty/loading/settings/login).
+  - **The device** — pick the model + orientation with the user (menu in Phase 5A).
 
-Also pick a **brand colour scheme** (a bold background + an accent) from the app's
-identity, and state the target **store + dimensions** (see table). Iterate until the
-user approves the plan. Save benefits, plan, and colours to memory.
+Iterate until the user approves. Save the benefits, plan, and visual system to memory.
 
 ## PHASE 4 — Capture
 
-The user navigates the app to the screens from the plan, captures clean screenshots
-(full signal/battery, time 9:41, realistic data), copies them to a folder, and gives you
-the paths. Assess each: is it rich and on-message? If a screen is weak, coach a retake.
-Save the paths + assessments to memory.
+The user navigates the app to the planned screens, captures clean screenshots (full
+signal/battery, time 9:41, realistic data), and gives you the paths. Assess each: rich and
+on-message? Coach a retake if a screen is weak. Save paths + assessments to memory.
 
 ## PHASE 5 — Design & render each screenshot
 
-Two stages per screenshot: **(A)** render the captured screenshot onto a photorealistic
-3D phone, then **(B)** author an HTML `.stage` around that phone image and render the
-final composition. Every phone is a real 3D device (never a flat frame) — head-on reads
-clean, and you can tilt it for dynamic hero shots, all from the same pipeline. Offline, $0.
+Two stages per screenshot: **(A)** render the captured screenshot onto a photorealistic 3D
+device, then **(B)** design an HTML stage around that device image and render the final
+composition. Offline, $0.
 
-### A. Render the 3D phone (`render_phone.py`)
+### A. Render the 3D device (`render_phone.py`)
 
-For each captured screenshot, map it onto a device and render a transparent phone PNG:
+Map the captured screenshot onto a device and render a transparent device PNG:
 
 ```bash
 SKILL_DIR="<absolute path to this skill directory>"
-python3 "$SKILL_DIR/render_phone.py" raw/01.png --model iphone-12-pro --out shots/phone-01.png
+python3 "$SKILL_DIR/render_phone.py" raw/01.png --model iphone-12-pro --out shots/dev-01.png
 # angled hero shot:
-python3 "$SKILL_DIR/render_phone.py" raw/01.png --model s21-ultra --yaw 18 --pitch -6 --out shots/phone-01.png
-# tablet, landscape (feed a landscape screenshot):
+python3 "$SKILL_DIR/render_phone.py" raw/01.png --model s21-ultra --yaw 18 --pitch -6 --out shots/dev-01.png
+# tablet, landscape (feed a LANDSCAPE screenshot):
 python3 "$SKILL_DIR/render_phone.py" raw/01.png --model ipad-pro-12-9 --orient landscape \
-  --out shots/phone-01.png --width 2732 --height 2048
+  --out shots/dev-01.png --width 2732 --height 2048
 ```
 
 - **Models** (`--model`) — all bundled, all CC-BY-4.0, commercial-OK, **credit required**
-  (see `assets/models/NOTICE.md`). **Present this menu to the user and let them pick** the
-  device for the set (match it to the target store):
+  (see `assets/models/NOTICE.md`). Present this menu and let the user pick the device
+  (match it to the target store):
 
   | `--model` | Device | Store |
   |-----------|--------|-------|
@@ -89,52 +111,42 @@ python3 "$SKILL_DIR/render_phone.py" raw/01.png --model ipad-pro-12-9 --orient l
   | `ipad-pro-12-9` | iPad Pro 12.9" (2020) | App Store (tablet) |
   | `ipad-mini-6` | iPad Mini 6 (2021) | tablet (compact) |
 
-  `--model` also takes a path to any `scene.gltf/.glb` with a separable screen mesh (the
-  orient/mirror/framing are all auto-detected, so most models "just work").
-- **`--orient portrait|landscape`** (default `portrait`): `landscape` rolls the device 90°
-  — for tablet shots held sideways. **Feed a landscape screenshot** and use landscape
-  `--width`/`--height` (e.g. 2732×2048). Phones are almost always portrait.
-- **`--yaw` / `--pitch`** (degrees, default 0 = head-on): orbit the camera for a
-  dynamic angle. Use head-on for the hero/first screenshot (max readability); vary
-  yaw/pitch across the set (e.g. ±15–20° yaw, small pitch) for rhythm. Keep angles
-  modest so text stays legible.
-- Output is a transparent, centred device at `--width`×`--height` (default 1290×2796).
-  The device is auto-framed to fill the width of whatever size you pass.
+  `--model` also takes a path to any `scene.gltf/.glb` with a separable screen mesh —
+  orient/mirror/framing are auto-detected, so most models just work.
+- **`--orient portrait|landscape`** (default portrait): `landscape` rolls the device 90°.
+  Feed a landscape screenshot and swap W×H (e.g. 2732×2048).
+- **`--yaw` / `--pitch`** (degrees, default 0 = head-on): orbit for a dynamic angle. Use
+  head-on for the hero/first shot (max readability); vary yaw/pitch across the set for
+  rhythm. Keep angles modest so text stays legible.
+- Output is transparent, the device auto-framed to fill the width at `--width`×`--height`
+  (default 1290×2796).
 
-### B. Author the stage & composite (`render.py`)
+### B. Design the stage (`render.py`) — bespoke, per app
 
-Write a `.stage` fragment using the classes in `design/base.css`. Only the *content*
-changes per screenshot — the shared stylesheet keeps the whole SET consistent. Start from
-the template matching the target device (base.css is tuned for the tall iPhone canvas, so
-the others carry a `<style>` block that scales the system to their canvas):
-
-- `templates/example.html` — iPhone / App Store phone (1290×2796)
-- `templates/example-android.html` — Google Play phone (1080×2160)
-- `templates/example-ipad.html` — iPad portrait (2048×2732)
-- `templates/example-ipad-landscape.html` — iPad landscape (2732×2048)
-
-- Set the brand palette once, on every stage, so all screenshots match:
-  `<div class="stage" style="--bg-a:#0a1a44; --bg-c:#1e50d8; --accent:#34d399;">`
-- `<h1>` = the action verb (biggest). `<h2>` = the benefit; wrap the punchiest word in
-  `<span class="accent">` for a colour pop.
-- `.phone` hosts the 3D render from step A: `<div class="phone"><img src="phone-01.png"></div>`
-  (render.py inlines local images; relative paths resolve from the fragment's folder).
-  Tune the phone's `width`/`top` on `.phone` per shot.
-- Optional hero: a `.breakout` — recreate the relevant on-screen UI panel in HTML so it
-  "bursts out" of the phone (overlapping both edges). Optional `.badge` for a small
-  supporting callout. Keep it clean — one strong breakout beats clutter.
-- **Consistency is critical**: same headline treatment, same background, same device on
-  every screenshot. Change only the words, the phone image, and the breakout content.
+`design/base.css` is **foundation only** (reset, the two fonts, a `.stage` full-bleed
+root). It carries **no layout** — you write the composition CSS yourself, in each
+fragment's own `<style>`, designed to this app's brand and this shot's archetype.
+`render.py` injects the fonts + foundation and screenshots each fragment at the exact size.
 
 ```bash
 python3 "$SKILL_DIR/render.py" screenshots/*.html --out-dir screenshots/final \
   --width 1290 --height 2796
 ```
 
-`render.py` supplies the fonts + design system and screenshots each fragment at the
-exact target size. Show the rendered PNGs to the user with the Read tool, gather
-feedback, **edit the HTML/CSS (or re-run step A with a different angle), and re-render**
-— iteration is cheap. Repeat until the set is approved. Save final paths to memory.
+- **Study the gallery first.** `examples/*.html` are three *deliberately different* worked
+  compositions (bold-benefit, feature-zoom, ipad-landscape) — read them to see the range
+  and the mechanics (device `<img>`, drop-shadow, absolute layout at real pixels). They are
+  **inspiration, not molds** — do not copy one and swap words; design for your app.
+- **Author at real pixels for the exact canvas** — there is no shared scale. A 1290-wide
+  iPhone shot and a 1080-wide Play shot are laid out independently.
+- **Place the device** with `<img src="dev-01.png">` (render.py inlines local images;
+  relative paths resolve from the fragment's folder). Give it a `drop-shadow` filter to
+  ground it. Angle, crop, bleed off an edge — whatever the composition wants.
+- **Consistency comes from the shared visual system you defined** (palette, type
+  treatment, margins, motif) — *not* from a shared layout. Vary the composition per shot.
+- Show finals to the user with the Read tool, gather feedback, **edit the CSS (or re-run A
+  with a different angle) and re-render** — iteration is cheap and deterministic. Save final
+  paths to memory.
 
 ### Dimensions
 
@@ -149,28 +161,83 @@ feedback, **edit the HTML/CSS (or re-run step A with a different angle), and re-
 | Google Play | Phone (16:9) | 1080 × 1920 | `s21-ultra` |
 | Google Play | Tablet | 2048 × 2732 | `ipad-mini-6` / `ipad-pro-12-9` |
 
-For **landscape** iPad shots, swap W×H (e.g. iPad 12.9" → 2732 × 2048) and pass
-`--orient landscape` to `render_phone.py` with a landscape screenshot.
+Pass the matching `--width`/`--height` to **both** `render_phone.py` and `render.py`. For
+landscape iPad shots, swap W×H (e.g. 2732 × 2048) and pass `--orient landscape` with a
+landscape screenshot.
 
-Pass the matching `--width`/`--height` to **both** `render_phone.py` and `render.py` so
-the device render and the stage share the exact target size.
+---
 
-`render_phone.py` frames the phone to **fill the width** of whatever canvas size you
-give it, so the device looks consistently large across stores. Play caps the aspect
-ratio at 2:1 — prefer **1080 × 2160** (closest to a phone's shape, so the device fills
-the frame like the iPhone set); 1080 × 1920 works too but leaves the phone shorter.
-`base.css` is tuned for the 1290-wide iPhone canvas — for Play, start from
-`templates/example-android.html`, whose `<style>` block scales the design system to the
-Play canvas.
+## DESIGN GUIDELINES
+
+This is the craft. Apply it while designing — it's what separates a set that converts from
+one that just looks fine.
+
+### Copywriting (the headline is doing most of the selling)
+
+- **Verb-led, benefit-first, specific.** "TRACK EVERY CARD'S VALUE" beats "Powerful
+  tracking." Sell the outcome, not the feature.
+- **Short.** ≤ ~5 words / two short lines. It has to land in under 2 seconds.
+- **One idea per screenshot.** Each shot makes a single point; don't cram.
+- **Vary the angle across the set** — lead benefit, then a differentiator, an objection
+  ("No ads, ever"), social proof, a premium feature. Together they answer "why this app?"
+- **Legible at thumbnail size** (see below) — big weight, high contrast.
+
+### Layout archetypes (a palette to draw from — combine and depart, don't just fill)
+
+Pick a *different* archetype for most shots so the set has rhythm:
+
+- **Bold benefit** — huge verb headline, device below, minimal else. Great opener.
+- **Feature zoom** — recreate ONE UI detail much larger/clearer than in-app as the hero;
+  device peeks in. Best for "look how simple/powerful this one thing is."
+- **Big stat / proof** — a single dominant number (savings, users, %). Trust and outcome.
+- **Comparison / before-after** — split or two states side by side. "With vs without."
+- **Social proof** — a review quote, rating, or "3.2M people" as the focal point.
+- **Benefit list** — 3–4 checkmarked points around a device. For feature breadth.
+- **Lifestyle / context** — device off-centre, bled off an edge, atmospheric background.
+- **Callout/breakout** — a UI panel bursting out of the device frame, overlapping edges.
+
+### Visual craft
+
+- **One focal point per shot** — headline OR hero element leads; everything else supports.
+- **Contrast & hierarchy** — the most important thing is the biggest / boldest / highest
+  contrast. Push the size ratio hard (display headline vs body).
+- **Breathing room** — generous margins; let the hero dominate. Crowded = cheap.
+- **Alignment & a grid** — pick consistent margins and stick to them within a shot.
+- **Depth** — drop-shadows, subtle gradients, glass, layering to lift the device off the bg.
+- **Motion** — a modest device tilt (yaw/pitch) adds energy; keep the hero shot head-on.
+
+### Match the app's brand
+
+- Derive the palette from the app (Phase 1). A bold on-brand background + one accent that
+  pops usually beats a neutral one — but a calm app should read calm.
+- Echo the app's type personality (rounded/geometric/serif). @font-face a signature face
+  if the app has one.
+- Reuse the app's real UI colours in recreated/breakout elements so they feel native.
+
+### Cohesion without sameness
+
+The set must feel like one family **and** stay visually varied. Hold these **constant**
+across all shots: the palette, the headline type treatment, the margin system, any motif.
+**Vary** these: the layout archetype, device angle/position, which element is the hero.
+That's the difference between a designed set and a monotonous template.
+
+### The first screenshot & thumbnails
+
+- The **first 1–2 shots** are seen at small size in search results and carry the single
+  biggest reason to download. Make the headline readable when the image is ~1/3 size.
+- Lead with your strongest benefit head-on; save angled/experimental compositions for
+  later in the set.
+- The set should tell a story when swiped — each shot reveals a new reason.
 
 ---
 
 ## KEY PRINCIPLES
 
-- **Benefits over features**; **specific over generic**; every headline starts with a verb.
-- The **first** screenshot carries the single biggest reason to download.
-- The set should tell a story when swiped; each screenshot reveals a new reason.
-- Never show empty states, loading, or settings — show the app at its best.
-- You are the designer. Iterate on the CSS until it looks like a professional set —
-  it's deterministic, so "make the headline bigger" or "shift the breakout down" is a
-  precise edit, not a gamble.
+- **You are the designer** — design bespoke to the app; never fill a template or impose a
+  house style.
+- **Benefits over features; specific over generic; every headline starts with a verb.**
+- **Cohesion from a shared visual system, variety from the layout.**
+- **First screenshot = biggest reason + thumbnail-legible.**
+- **Never show empty/loading/settings/login** — show the app at its best.
+- It's deterministic: "make the headline bigger" or "shift the device down" is a precise
+  edit, not a gamble. Iterate freely.

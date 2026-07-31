@@ -1,104 +1,33 @@
-/* store-screenshots design system.
-   render.py prepends @font-face (Montserrat 900 + Inter) and injects this file.
-   Author each screenshot as a `.stage` using these classes so the whole SET stays
-   visually consistent. Override CSS custom properties per set for brand colours. */
+/* store-screenshots — FOUNDATION ONLY (no layout).
+   render.py prepends @font-face for the two bundled families, then injects this file.
 
-:root {
-  --bg-a: #0a1a44;   /* deep gradient stop */
-  --bg-b: #12307e;   /* mid gradient stop  */
-  --bg-c: #1e50d8;   /* bright gradient stop */
-  --glow-1: rgba(56, 189, 248, 0.55);   /* top-left glow */
-  --glow-2: rgba(124, 58, 237, 0.45);   /* right glow */
-  --accent: #34d399;                    /* accent / positive colour */
-  --accent-2: #6ee7b7;
-  --ink-soft: #c7d8ff;
-}
+   This file deliberately carries NO composition: no headline positions, no phone slot,
+   no components. Every screenshot is designed BESPOKE per app in its own fragment — you
+   write the layout CSS to match that app's brand, colours, type feel and content. This
+   foundation only: resets the box model, makes the fragment fill the exact render size,
+   and exposes the two bundled fonts. Build freely on top; override anything. */
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-/* Fill whatever render size is passed (--width/--height): 1290x2796 for App Store,
-   1080x1920 for Play. Element positions/sizes below are tuned for the 1290-wide iPhone
-   default; for other sizes, override per-fragment (or scale) as you author. */
+
+/* Fill whatever render size render.py passes (--width/--height). Author in real pixels
+   for that exact canvas — there is no shared scale to fight. */
 html, body { width: 100vw; height: 100vh; overflow: hidden; }
-
-.stage {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  font-family: 'Inter', sans-serif;
-  overflow: hidden;
-  background:
-    radial-gradient(1200px 900px at 12% -5%, var(--glow-1), transparent 55%),
-    radial-gradient(1100px 1000px at 112% 28%, var(--glow-2), transparent 55%),
-    linear-gradient(158deg, var(--bg-a) 0%, var(--bg-b) 42%, var(--bg-c) 100%);
+body {
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* Optional rising-chart motif behind the phone. <svg class="motif">…</svg> */
-.motif { position: absolute; inset: 0; opacity: 0.15; }
-.motif polyline { fill: none; stroke: var(--accent-2); stroke-width: 26; stroke-linecap: round; }
-
-/* Top copy block ------------------------------------------------------------- */
-.kicker { position: absolute; top: 150px; left: 0; right: 0; text-align: center; }
-.kicker span {
-  display: inline-block; padding: 16px 36px;
-  border: 2px solid rgba(255, 255, 255, 0.35); border-radius: 999px;
-  color: var(--ink-soft); font-weight: 700; font-size: 34px; letter-spacing: 6px;
-  background: rgba(255, 255, 255, 0.06);
+:root {
+  /* The two bundled families. Montserrat is weight 900 only — use it for big display
+     headlines; Inter (variable, 100–900) for everything else. Pick per app; you can also
+     @font-face your own if the app has a signature typeface. */
+  --font-display: 'Montserrat', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
 }
 
-h1 {
-  position: absolute; top: 232px; left: 40px; right: 40px; text-align: center;
-  font-family: 'Montserrat', sans-serif; font-weight: 900;
-  font-size: 250px; line-height: 0.9; color: #fff; letter-spacing: -8px;
-  text-shadow: 0 22px 60px rgba(0, 0, 0, 0.35);
-}
-
-h2 {
-  position: absolute; top: 540px; left: 70px; right: 70px; text-align: center;
-  font-family: 'Montserrat', sans-serif; font-weight: 900;
-  /* fits "TRADING CARD PRICES" on one line at 1290w; wraps gracefully if longer */
-  font-size: 88px; line-height: 1.02; color: #fff; letter-spacing: -1px;
-  text-transform: uppercase;
-}
-h2 .accent {
-  background: linear-gradient(90deg, var(--accent-2), var(--accent));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-}
-
-/* Phone --------------------------------------------------------------------- */
-/* The phone is a photorealistic 3D render (transparent PNG) produced by
-   render_phone.py — real device, real screen, optional tilt. It already contains the
-   frame, notch and on-screen app shot, so the stage just positions the image. The
-   render is full-stage-size with the phone centred; `.phone` places that layer. Tune
-   width/top per shot (iterate — it's deterministic). drop-shadow grounds it. */
-.phone {
-  position: absolute; top: 820px; left: 50%; transform: translateX(-50%);
-  width: 1290px; z-index: 3;
-  filter: drop-shadow(0 60px 110px rgba(0, 0, 0, 0.55));
-}
-.phone img { width: 100%; display: block; }
-
-/* Floating elements --------------------------------------------------------- */
-.badge {
-  position: absolute; padding: 20px 34px; border-radius: 24px;
-  background: linear-gradient(135deg, var(--accent), #059669); color: #fff;
-  font-weight: 900; font-size: 46px; box-shadow: 0 24px 50px rgba(5, 150, 105, 0.5);
-  transform: rotate(-4deg); z-index: 5;
-}
-
-/* A UI panel "broken out" of the phone — the hero element. Overlaps both edges. */
-.breakout {
-  position: absolute; left: 70px; right: 70px;
-  background: linear-gradient(135deg, #2f6bff, #1b45c9); color: #fff;
-  border-radius: 46px; padding: 54px 60px;
-  box-shadow: 0 50px 95px rgba(3, 10, 40, 0.6), inset 0 2px 0 rgba(255, 255, 255, 0.18);
-  z-index: 4;
-}
-.breakout .lbl { font-size: 38px; color: var(--ink-soft); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; }
-.breakout .val { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 128px; line-height: 1; margin-top: 8px; letter-spacing: -3px; }
-.breakout .pill {
-  display: inline-flex; align-items: center; gap: 12px; margin-top: 28px;
-  padding: 14px 30px; border-radius: 999px;
-  background: rgba(52, 211, 153, 0.22); color: var(--accent-2); font-weight: 800; font-size: 40px;
-}
-.breakout .spark { position: absolute; right: 60px; top: 66px; width: 320px; height: 120px; }
-.breakout .spark polyline { fill: none; stroke: #bcd4ff; stroke-width: 8; stroke-linecap: round; }
+/* Full-bleed root for one screenshot. Give it your own background and lay the composition
+   out however this app wants — grid, flex, absolute, whatever fits the idea. The device PNG
+   from render_phone.py is transparent with the frame/notch baked in; add your own
+   drop-shadow filter to ground it. */
+.stage { position: relative; width: 100vw; height: 100vh; overflow: hidden; }

@@ -2,10 +2,11 @@
 """
 Render authored screenshot HTML to exact app-store PNG dimensions — offline, no API.
 
-You (the LLM) author each screenshot as a small HTML fragment using the classes in
-design/base.css (a `.stage` with a headline, an app screenshot, optional breakout).
-This script supplies the shared design system + bundled fonts and renders each fragment
-with headless chromium at the exact target size, so a whole SET stays consistent.
+You (the LLM) author each screenshot as a bespoke HTML fragment — its own layout CSS in a
+`<style>` block, designed to the app's brand. design/base.css is foundation only (reset,
+fonts, a full-bleed `.stage` root); it carries no layout. This script injects the fonts +
+foundation and renders each fragment with headless chromium at the exact target size. See
+examples/*.html for worked compositions.
 
 Usage:
   render.py screenshots/01.html [02.html ...] --out-dir screenshots/final
