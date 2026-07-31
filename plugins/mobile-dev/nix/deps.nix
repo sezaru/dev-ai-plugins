@@ -2,6 +2,9 @@
 # A function `pkgs -> [ derivation ]`. The flake auto-discovers this file and exposes
 # `packages.<system>.mobile-dev-deps` from it. Add packages here as skills need them.
 pkgs: [
-  # ASO screenshots skill (compose.py / showcase.py) — Pillow-based image compositing.
+  # python3: render.py (store-screenshots, stdlib only) + Pillow for the legacy
+  # aso-appstore-screenshots compositor.
   (pkgs.python3.withPackages (ps: [ps.pillow]))
+  # store-screenshots: renders authored HTML to exact store dimensions.
+  pkgs.chromium
 ]
