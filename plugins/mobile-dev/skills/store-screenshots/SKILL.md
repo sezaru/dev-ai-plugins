@@ -121,11 +121,20 @@ feedback, **edit the HTML/CSS (or re-run step A with a different angle), and re-
 | App Store | iPhone 6.9" | 1320 × 2868 |
 | App Store | iPhone 6.7" (default) | 1290 × 2796 |
 | App Store | iPhone 6.5" | 1242 × 2688 |
-| Google Play | Phone | 1080 × 1920 (or up to 1080 × 2400) |
+| Google Play | Phone (recommended) | **1080 × 2160** (2:1) |
+| Google Play | Phone (16:9) | 1080 × 1920 |
 
 Pass the matching `--width`/`--height` to **both** `render_phone.py` and `render.py` so
 the phone render and the stage share the exact target size. For Play Store, use
 `--model s21-ultra` (Android); for the App Store, `--model iphone-12-pro`.
+
+`render_phone.py` frames the phone to **fill the width** of whatever canvas size you
+give it, so the device looks consistently large across stores. Play caps the aspect
+ratio at 2:1 — prefer **1080 × 2160** (closest to a phone's shape, so the device fills
+the frame like the iPhone set); 1080 × 1920 works too but leaves the phone shorter.
+`base.css` is tuned for the 1290-wide iPhone canvas — for Play, start from
+`templates/example-android.html`, whose `<style>` block scales the design system to the
+Play canvas.
 
 ---
 

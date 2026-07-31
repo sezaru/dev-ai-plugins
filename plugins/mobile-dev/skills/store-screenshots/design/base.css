@@ -15,12 +15,15 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { width: 1290px; height: 2796px; overflow: hidden; }
+/* Fill whatever render size is passed (--width/--height): 1290x2796 for App Store,
+   1080x1920 for Play. Element positions/sizes below are tuned for the 1290-wide iPhone
+   default; for other sizes, override per-fragment (or scale) as you author. */
+html, body { width: 100vw; height: 100vh; overflow: hidden; }
 
 .stage {
   position: relative;
-  width: 1290px;
-  height: 2796px;
+  width: 100vw;
+  height: 100vh;
   font-family: 'Inter', sans-serif;
   overflow: hidden;
   background:

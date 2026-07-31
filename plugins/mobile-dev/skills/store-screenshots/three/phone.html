@@ -100,16 +100,33 @@ new THREE.GLTFLoader().load(MODEL,(gl)=>{
   const s=analyzeScreen(screen);
   const box=new THREE.Box3().setFromObject(root);
   const sphere=box.getBoundingSphere(new THREE.Sphere());
+  const center=sphere.center;
   // orient the normal outward: the screen sits on the front face, so its center is
   // offset from the body centroid toward the front.
   if(s.normal.dot(new THREE.Vector3().subVectors(s.center,box.getCenter(new THREE.Vector3())))<0) s.normal.negate();
   const right=new THREE.Vector3().crossVectors(s.up,s.normal).normalize();
   // aim the camera down the screen normal, orbited by yaw (about up) then pitch (about right)
   const dir=s.normal.clone().applyAxisAngle(s.up,YAW).applyAxisAngle(right,PITCH).normalize();
-  const dist=sphere.radius/Math.tan(cam.fov*Math.PI/360)*1.12;   // sphere framing: rotation never clips
   cam.up.copy(s.up);
-  cam.position.copy(sphere.center).addScaledVector(dir,dist);
-  cam.lookAt(sphere.center);
+  // Aspect-aware "contain" framing: project the phone's real bounding box onto the camera
+  // axes and fit it inside the frame (touching the binding axis) with a small margin — the
+  // WHOLE phone is always visible, never cropped. On canvases near a phone's aspect (the
+  // iPhone's 1290x2796, Android at 1080x2160 / 2:1) this fills the width with only a hair
+  // of margin. Uses the box (not the bounding sphere, whose radius ~= the diagonal and
+  // would leave big side margins that make the phone look small). Projection is done after
+  // the yaw/pitch orbit, so tilted shots frame correctly too.
+  const camRight=new THREE.Vector3().crossVectors(s.up,dir).normalize();
+  const camUp=new THREE.Vector3().crossVectors(dir,camRight).normalize();
+  let halfW=0,halfH=0; const mn=box.min,mx=box.max;
+  for(let xi=0;xi<2;xi++)for(let yi=0;yi<2;yi++)for(let zi=0;zi<2;zi++){
+    const c=new THREE.Vector3(xi?mx.x:mn.x,yi?mx.y:mn.y,zi?mx.z:mn.z).sub(center);
+    halfW=Math.max(halfW,Math.abs(c.dot(camRight)));
+    halfH=Math.max(halfH,Math.abs(c.dot(camUp)));
+  }
+  const t=Math.tan(cam.fov*Math.PI/360), aspect=W/H;
+  const dist=Math.max(halfW/(t*aspect), halfH/t)*1.05;
+  cam.position.copy(center).addScaledVector(dir,dist);
+  cam.lookAt(center);
   // tighten near/far around the phone — a 0.001..100000 range wrecks z-buffer precision
   // and z-fights the phone's coplanar glass/steel-frame layers (torn edges when tilted).
   cam.near=Math.max(dist-sphere.radius*2, dist*0.02);
