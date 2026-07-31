@@ -59,38 +59,60 @@ Save the paths + assessments to memory.
 
 ## PHASE 5 — Design & render each screenshot
 
-For each screenshot, **author an HTML fragment** and render it with `render.py`.
+Two stages per screenshot: **(A)** render the captured screenshot onto a photorealistic
+3D phone, then **(B)** author an HTML `.stage` around that phone image and render the
+final composition. Every phone is a real 3D device (never a flat frame) — head-on reads
+clean, and you can tilt it for dynamic hero shots, all from the same pipeline. Offline, $0.
 
-### Authoring
+### A. Render the 3D phone (`render_phone.py`)
+
+For each captured screenshot, map it onto a device and render a transparent phone PNG:
+
+```bash
+SKILL_DIR="<absolute path to this skill directory>"
+python3 "$SKILL_DIR/render_phone.py" raw/01.png --model iphone-12-pro --out shots/phone-01.png
+# angled hero shot:
+python3 "$SKILL_DIR/render_phone.py" raw/01.png --model s21-ultra --yaw 18 --pitch -6 --out shots/phone-01.png
+```
+
+- **Models** (`--model`, both CC-BY-4.0, commercial-OK, credit required — see
+  `assets/models/NOTICE.md`): `iphone-12-pro` (iOS), `s21-ultra` (Android). Match the
+  device to the target store. `--model` also takes a path to any `scene.gltf/.glb` with a
+  separable screen mesh.
+- **`--yaw` / `--pitch`** (degrees, default 0 = head-on): orbit the camera for a
+  dynamic angle. Use head-on for the hero/first screenshot (max readability); vary
+  yaw/pitch across the set (e.g. ±15–20° yaw, small pitch) for rhythm. Keep angles
+  modest so text stays legible.
+- Output is a transparent, centred phone at `--width`×`--height` (default 1290×2796).
+
+### B. Author the stage & composite (`render.py`)
 
 Write a `.stage` fragment using the classes in `design/base.css` (see
-`templates/example.html` for a worked example). Only the *content* changes per
-screenshot — the shared stylesheet keeps the whole SET consistent.
+`templates/example.html`). Only the *content* changes per screenshot — the shared
+stylesheet keeps the whole SET consistent.
 
 - Set the brand palette once, on every stage, so all screenshots match:
   `<div class="stage" style="--bg-a:#0a1a44; --bg-c:#1e50d8; --accent:#34d399;">`
 - `<h1>` = the action verb (biggest). `<h2>` = the benefit; wrap the punchiest word in
   `<span class="accent">` for a colour pop.
-- `.phone` holds the captured screenshot: `<img class="app-shot" src="ABS/OR/REL/path.png">`
-  (render.py inlines local images, so relative paths resolve from the fragment's folder).
+- `.phone` hosts the 3D render from step A: `<div class="phone"><img src="phone-01.png"></div>`
+  (render.py inlines local images; relative paths resolve from the fragment's folder).
+  Tune the phone's `width`/`top` on `.phone` per shot.
 - Optional hero: a `.breakout` — recreate the relevant on-screen UI panel in HTML so it
   "bursts out" of the phone (overlapping both edges). Optional `.badge` for a small
   supporting callout. Keep it clean — one strong breakout beats clutter.
-- **Consistency is critical**: same headline treatment, same background, same phone on
-  every screenshot. Change only the words, the app-shot, and the breakout content.
-
-### Rendering
+- **Consistency is critical**: same headline treatment, same background, same device on
+  every screenshot. Change only the words, the phone image, and the breakout content.
 
 ```bash
-SKILL_DIR="<absolute path to this skill directory>"
 python3 "$SKILL_DIR/render.py" screenshots/*.html --out-dir screenshots/final \
   --width 1290 --height 2796
 ```
 
 `render.py` supplies the fonts + design system and screenshots each fragment at the
 exact target size. Show the rendered PNGs to the user with the Read tool, gather
-feedback, **edit the HTML/CSS, and re-render** — iteration is instant and free. Repeat
-until the set is approved. Save final paths to memory.
+feedback, **edit the HTML/CSS (or re-run step A with a different angle), and re-render**
+— iteration is cheap. Repeat until the set is approved. Save final paths to memory.
 
 ### Dimensions
 
@@ -101,8 +123,9 @@ until the set is approved. Save final paths to memory.
 | App Store | iPhone 6.5" | 1242 × 2688 |
 | Google Play | Phone | 1080 × 1920 (or up to 1080 × 2400) |
 
-Pass the matching `--width`/`--height`. For Play Store, also swap to an Android frame
-when available (Phase B of this plugin).
+Pass the matching `--width`/`--height` to **both** `render_phone.py` and `render.py` so
+the phone render and the stage share the exact target size. For Play Store, use
+`--model s21-ultra` (Android); for the App Store, `--model iphone-12-pro`.
 
 ---
 

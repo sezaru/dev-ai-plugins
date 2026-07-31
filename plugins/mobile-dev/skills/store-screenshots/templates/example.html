@@ -1,6 +1,9 @@
 <!-- Example screenshot fragment. Author each screenshot like this: a `.stage` using
      classes from design/base.css. render.py supplies fonts + styles and renders it.
-     Positions (top/right) are set inline because they vary per composition. -->
+     Positions (top/right) are set inline because they vary per composition.
+     The phone is a 3D render made first with render_phone.py (see SKILL.md):
+       render_phone.py raw-screenshot.png --model iphone-12-pro --out phone-01.png
+     then referenced here as the .phone image. Use --yaw/--pitch for angled hero shots. -->
 <div class="stage">
   <svg class="motif" viewBox="0 0 1290 2796" preserveAspectRatio="none">
     <polyline points="-50,1520 200,1420 380,1490 560,1250 760,1340 980,1040 1200,1120 1360,840"/>
@@ -10,12 +13,7 @@
   <h1>TRACK</h1>
   <h2>TRADING CARD <span class="accent">PRICES</span></h2>
 
-  <div class="phone">
-    <div class="notch"></div>
-    <div class="screen">
-      <img class="app-shot" src="sample-shot.png">
-    </div>
-  </div>
+  <div class="phone"><img src="phone-01.png"></div>
 
   <div class="badge" style="top:1600px; right:74px;">+$948 today</div>
 

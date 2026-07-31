@@ -1,0 +1,131 @@
+<!doctype html><html><head><meta charset=utf-8>
+<style>
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent}
+  #bg{position:absolute;inset:0;
+    background:
+      radial-gradient(1200px 900px at 12% -5%, rgba(56,189,248,.55), transparent 55%),
+      radial-gradient(1100px 1000px at 112% 28%, rgba(124,58,237,.45), transparent 55%),
+      linear-gradient(158deg,#0a1a44 0%,#12307e 42%,#1e50d8 100%);}
+  canvas{position:absolute;inset:0}
+</style>
+<script src="three.min.js"></script>
+<script src="RoomEnvironment.js"></script>
+<script src="GLTFLoader.js"></script>
+</head><body>
+<div id="bg"></div>
+<pre id="log" style="display:none"></pre>
+<script>
+// ---------------------------------------------------------------------------
+// Renders a photorealistic phone (glTF) with an app screenshot mapped onto its
+// real screen, over transparent or gradient background. Driven entirely by URL
+// params so one template serves every model / screenshot / camera angle:
+//   ?model=<file:// url to scene.gltf>   the phone model
+//   &shot=<file:// url to screenshot>    the app screenshot to place on-screen
+//   &yaw=<deg> &pitch=<deg>              orbit the camera off head-on (dynamic angles)
+//   &bg=none                             transparent background (for compositing)
+// The page sets window.__READY once everything has drawn, so the capture driver
+// (cdp_shot.py) can grab a fully-rendered, non-racy frame.
+// ---------------------------------------------------------------------------
+const Q=new URLSearchParams(location.search);
+const MODEL=Q.get("model"), SHOT=Q.get("shot");
+const YAW=(+Q.get("yaw")||0)*Math.PI/180, PITCH=(+Q.get("pitch")||0)*Math.PI/180;
+if(Q.get("bg")==="none") document.getElementById("bg").remove();
+
+const L=(...a)=>{const e=document.getElementById("log");if(e)e.textContent+=a.join(" ")+"\n";};
+window.onerror=(m,s,l,c)=>L("ONERROR",m,"@",l+":"+c);
+window.onunhandledrejection=(e)=>L("REJECT",(e.reason&&(e.reason.stack||e.reason.message))||e.reason);
+
+// Headless chromium never fires <img>.onload, so GLTFLoader's texture loads (via
+// ImageBitmapLoader / ImageLoader) hang forever. Route image loading through
+// fetch->createImageBitmap, which does work headless.
+function bitmapLoad(url,onLoad,_p,onError){
+  fetch(url).then(r=>r.blob()).then(b=>createImageBitmap(b))
+    .then(bmp=>onLoad&&onLoad(bmp)).catch(e=>{L("IMG ERR",e&&e.message);onError&&onError(e);});
+}
+THREE.ImageBitmapLoader&&(THREE.ImageBitmapLoader.prototype.load=function(u,o,p,e){bitmapLoad(u,o,p,e);return{};});
+THREE.ImageLoader.prototype.load=function(u,o,p,e){bitmapLoad(u,o,p,e);return document.createElementNS("http://www.w3.org/1999/xhtml","img");};
+
+const W=innerWidth, H=innerHeight;
+const r=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});
+// supersample: render the WebGL buffer at 2x and let it downsample into the WxH canvas.
+// SwiftShader's MSAA barely touches high-contrast metal edges / specular sparkle on the
+// glossy frame; SSAA cleans both.
+r.setSize(W,H); r.setPixelRatio(2);
+r.outputEncoding=THREE.sRGBEncoding;
+r.toneMapping=THREE.ACESFilmicToneMapping; r.toneMappingExposure=1.05;
+document.body.appendChild(r.domElement);
+const scene=new THREE.Scene();
+if(THREE.RoomEnvironment){const pm=new THREE.PMREMGenerator(r);scene.environment=pm.fromScene(new THREE.RoomEnvironment(),0.04).texture;}
+const key=new THREE.DirectionalLight(0xffffff,2.4);key.position.set(4,6,6);scene.add(key);
+const fill=new THREE.DirectionalLight(0xffffff,0.8);fill.position.set(-5,2,3);scene.add(fill);
+scene.add(new THREE.AmbientLight(0xffffff,0.3));
+const cam=new THREE.PerspectiveCamera(28,W/H,0.001,100000);
+(function animate(){requestAnimationFrame(animate); r.render(scene,cam);})();
+
+// Model-agnostic screen finder + planar-UV regen: the screen mesh's baked UVs are
+// unreliable, so rebuild clean 0-1 UVs from its own geometry (min-extent axis = normal,
+// max = up, mid = right), and report the world-space normal/up so the camera can be
+// aimed straight down the screen regardless of any baked wrapper transform.
+function analyzeScreen(mesh){
+  mesh.updateWorldMatrix(true,false);
+  const g=mesh.geometry, pos=g.attributes.position;
+  const comp=(i,a)=>a===0?pos.getX(i):a===1?pos.getY(i):pos.getZ(i);
+  const mn=[Infinity,Infinity,Infinity], mx=[-Infinity,-Infinity,-Infinity];
+  for(let i=0;i<pos.count;i++)for(let a=0;a<3;a++){const v=comp(i,a);if(v<mn[a])mn[a]=v;if(v>mx[a])mx[a]=v;}
+  const ext=[mx[0]-mn[0],mx[1]-mn[1],mx[2]-mn[2]];
+  const ord=[0,1,2].sort((a,b)=>ext[a]-ext[b]);
+  const nA=ord[0], upA=ord[2], rightA=ord[1];
+  const uv=new Float32Array(pos.count*2);
+  for(let i=0;i<pos.count;i++){
+    uv[i*2]=(comp(i,rightA)-mn[rightA])/ext[rightA];
+    uv[i*2+1]=1-(comp(i,upA)-mn[upA])/ext[upA];   // flipY=false puts image-top at v=0
+  }
+  g.setAttribute("uv",new THREE.BufferAttribute(uv,2));
+  const nm=new THREE.Matrix3().getNormalMatrix(mesh.matrixWorld);
+  const axis=(i)=>{const v=new THREE.Vector3();v.setComponent(i,1);return v.applyMatrix3(nm).normalize();};
+  const center=new THREE.Vector3();
+  g.computeBoundingBox(); g.boundingBox.getCenter(center); center.applyMatrix4(mesh.matrixWorld);
+  return {normal:axis(nA), up:axis(upA), center};
+}
+
+new THREE.GLTFLoader().load(MODEL,(gl)=>{
+  const root=gl.scene; root.updateMatrixWorld(true);
+  let screen=null;
+  root.traverse(o=>{ if(o.isMesh){
+    const nm=(o.name+" "+((o.material&&o.material.name)||""));
+    if(/screen|display|wallpaper/i.test(nm)&&!/bezel|glass/i.test(nm)) screen=o;
+  }});
+  scene.add(root);
+  if(!screen){ L("NO SCREEN MESH"); window.__READY=true; return; }
+  const s=analyzeScreen(screen);
+  const box=new THREE.Box3().setFromObject(root);
+  const sphere=box.getBoundingSphere(new THREE.Sphere());
+  // orient the normal outward: the screen sits on the front face, so its center is
+  // offset from the body centroid toward the front.
+  if(s.normal.dot(new THREE.Vector3().subVectors(s.center,box.getCenter(new THREE.Vector3())))<0) s.normal.negate();
+  const right=new THREE.Vector3().crossVectors(s.up,s.normal).normalize();
+  // aim the camera down the screen normal, orbited by yaw (about up) then pitch (about right)
+  const dir=s.normal.clone().applyAxisAngle(s.up,YAW).applyAxisAngle(right,PITCH).normalize();
+  const dist=sphere.radius/Math.tan(cam.fov*Math.PI/360)*1.12;   // sphere framing: rotation never clips
+  cam.up.copy(s.up);
+  cam.position.copy(sphere.center).addScaledVector(dir,dist);
+  cam.lookAt(sphere.center);
+  // tighten near/far around the phone — a 0.001..100000 range wrecks z-buffer precision
+  // and z-fights the phone's coplanar glass/steel-frame layers (torn edges when tilted).
+  cam.near=Math.max(dist-sphere.radius*2, dist*0.02);
+  cam.far=dist+sphere.radius*2;
+  cam.updateProjectionMatrix();
+
+  bitmapLoad(SHOT,(bmp)=>{
+    const tex=new THREE.CanvasTexture(bmp);
+    tex.flipY=false; tex.encoding=THREE.sRGBEncoding;
+    tex.wrapS=tex.wrapT=THREE.ClampToEdgeWrapping; tex.needsUpdate=true;
+    // polygonOffset pulls the flat screen slightly forward so it never z-fights the
+    // coplanar body/bezel behind it (visible as smears when the phone is tilted).
+    screen.material=new THREE.MeshBasicMaterial({map:tex,toneMapped:false,side:THREE.DoubleSide,
+      polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4});
+    screen.renderOrder=10;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ window.__READY=true; }));
+  },undefined,(e)=>{L("TEXERR",e&&e.message); window.__READY=true;});
+},undefined,(e)=>{L("GLTFERR",e&&(e.message||e)); window.__READY=true;});
+</script></body></html>

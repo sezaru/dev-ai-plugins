@@ -62,19 +62,17 @@ h2 .accent {
 }
 
 /* Phone --------------------------------------------------------------------- */
+/* The phone is a photorealistic 3D render (transparent PNG) produced by
+   render_phone.py — real device, real screen, optional tilt. It already contains the
+   frame, notch and on-screen app shot, so the stage just positions the image. The
+   render is full-stage-size with the phone centred; `.phone` places that layer. Tune
+   width/top per shot (iterate — it's deterministic). drop-shadow grounds it. */
 .phone {
-  position: absolute; top: 930px; left: 50%; transform: translateX(-50%);
-  width: 980px; height: 2000px;               /* bottom bleeds off canvas */
-  background: #0a0a0f; border-radius: 80px; padding: 20px;
-  box-shadow: 0 70px 130px rgba(0, 0, 0, 0.55), inset 0 0 0 2px rgba(255, 255, 255, 0.07);
+  position: absolute; top: 820px; left: 50%; transform: translateX(-50%);
+  width: 1290px; z-index: 3;
+  filter: drop-shadow(0 60px 110px rgba(0, 0, 0, 0.55));
 }
-.phone.tilt { transform: translateX(-50%) perspective(2600px) rotateY(-14deg) rotateX(4deg); }
-.screen { position: relative; width: 100%; height: 100%; border-radius: 60px; overflow: hidden; background: #fff; }
-.screen .app-shot { width: 100%; display: block; }   /* tall screenshot; overflow clipped */
-.notch {
-  position: absolute; top: 24px; left: 50%; transform: translateX(-50%);
-  width: 172px; height: 42px; background: #0a0a0f; border-radius: 22px; z-index: 2;
-}
+.phone img { width: 100%; display: block; }
 
 /* Floating elements --------------------------------------------------------- */
 .badge {
