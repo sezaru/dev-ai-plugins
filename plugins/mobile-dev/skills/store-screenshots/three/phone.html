@@ -30,6 +30,7 @@ const Q=new URLSearchParams(location.search);
 const MODEL=Q.get("model"), SHOT=Q.get("shot");
 const YAW=(+Q.get("yaw")||0)*Math.PI/180, PITCH=(+Q.get("pitch")||0)*Math.PI/180;
 const LANDSCAPE=/^land/i.test(Q.get("orient")||"");   // rotate the device 90° (tablets)
+const SCALE=+Q.get("scale")||1;   // <1 shrinks the device in-frame (leaves gutters for copy)
 if(Q.get("bg")==="none") document.getElementById("bg").remove();
 
 const L=(...a)=>{const e=document.getElementById("log");if(e)e.textContent+=a.join(" ")+"\n";};
@@ -86,7 +87,7 @@ function analyzeScreen(mesh){
   const axis=(i)=>{const v=new THREE.Vector3();v.setComponent(i,1);return v.applyMatrix3(nm).normalize();};
   const center=new THREE.Vector3();
   g.computeBoundingBox(); g.boundingBox.getCenter(center); center.applyMatrix4(mesh.matrixWorld);
-  return {normal:axis(nA), up:axis(upA), right:axis(rightA), center};
+  return {normal:axis(nA), up:axis(upA), right:axis(rightA), center, aspect:ext[rightA]/ext[upA]};
 }
 
 new THREE.GLTFLoader().load(MODEL,(gl)=>{
@@ -134,7 +135,9 @@ new THREE.GLTFLoader().load(MODEL,(gl)=>{
     halfH=Math.max(halfH,Math.abs(c.dot(camUp)));
   }
   const t=Math.tan(cam.fov*Math.PI/360), aspect=W/H;
-  const dist=Math.max(halfW/(t*aspect), halfH/t)*1.05;
+  // *1.05 = hair of margin; /SCALE pushes the camera back so the device fills less of the
+  // frame (SCALE<1 leaves side/top gutters — for copy-beside-device layouts).
+  const dist=Math.max(halfW/(t*aspect), halfH/t)*1.05/SCALE;
   cam.position.copy(center).addScaledVector(dir,dist);
   cam.lookAt(center);
   // tighten near/far around the phone — a 0.001..100000 range wrecks z-buffer precision
@@ -155,7 +158,24 @@ new THREE.GLTFLoader().load(MODEL,(gl)=>{
     screen.material=new THREE.MeshBasicMaterial({map:tex,toneMapped:false,side:THREE.DoubleSide,
       polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4});
     screen.renderOrder=10;
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{ window.__READY=true; }));
+    // Layout metadata for the stage author: measure the device's pixel bounding box from the
+    // ACTUAL rendered alpha silhouette (robust for any yaw/pitch — projecting 3D corners
+    // breaks when a tilted box crosses the camera plane), plus the on-screen aspect so the
+    // app screenshot can be captured at the right ratio (a mismatch stretches it / bars it).
+    function emitMeta(){
+      const F=4, cw=Math.ceil(W/F), ch=Math.ceil(H/F);
+      const c=document.createElement("canvas"); c.width=cw; c.height=ch;
+      const cx=c.getContext("2d"); cx.drawImage(r.domElement,0,0,cw,ch);
+      const d=cx.getImageData(0,0,cw,ch).data;
+      let x0=cw,y0=ch,x1=-1,y1=-1;
+      for(let y=0;y<ch;y++)for(let x=0;x<cw;x++){ if(d[(y*cw+x)*4+3]>16){
+        if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; } }
+      const dev = x1<x0 ? {x:0,y:0,w:0,h:0} :
+        {x:x0*F, y:y0*F, w:Math.min(W,(x1+1)*F)-x0*F, h:Math.min(H,(y1+1)*F)-y0*F};
+      const dispAsp=LANDSCAPE?(1/s.aspect):s.aspect;
+      window.__META={image:{w:W,h:H},device:dev,screen_aspect:+dispAsp.toFixed(4)};
+    }
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ emitMeta(); window.__READY=true; }));
   },undefined,(e)=>{L("TEXERR",e&&e.message); window.__READY=true;});
 },undefined,(e)=>{L("GLTFERR",e&&(e.message||e)); window.__READY=true;});
 </script></body></html>

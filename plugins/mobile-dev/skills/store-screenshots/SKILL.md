@@ -80,6 +80,14 @@ The user navigates the app to the planned screens, captures clean screenshots (f
 signal/battery, time 9:41, realistic data), and gives you the paths. Assess each: rich and
 on-message? Coach a retake if a screen is weak. Save paths + assessments to memory.
 
+**Capture at the device's native full-screen resolution** so the screenshot's aspect
+matches the model's screen — otherwise it's stretched onto the screen mesh. A real
+screenshot taken *on* the target device is already correct. `render_phone.py` warns and
+prints the ideal size if the aspect is off (and the sidecar JSON reports `screen_aspect`,
+width÷height). Rough screen aspects: iPhone ≈ 0.465, S21 ≈ 0.454, iPad portrait ≈ 0.76
+(landscape ≈ 1.32), iPad mini ≈ 0.66. Never letterbox the screenshot yourself — a padded
+or partial capture bakes bars into the screen.
+
 ## PHASE 5 — Design & render each screenshot
 
 Two stages per screenshot: **(A)** render the captured screenshot onto a photorealistic 3D
@@ -118,8 +126,12 @@ python3 "$SKILL_DIR/render_phone.py" raw/01.png --model ipad-pro-12-9 --orient l
 - **`--yaw` / `--pitch`** (degrees, default 0 = head-on): orbit for a dynamic angle. Use
   head-on for the hero/first shot (max readability); vary yaw/pitch across the set for
   rhythm. Keep angles modest so text stays legible.
-- Output is transparent, the device auto-framed to fill the width at `--width`×`--height`
-  (default 1290×2796).
+- **`--scale`** (default 1.0 = fill width): `<1` shrinks the device in-frame, leaving
+  gutters. **Use this for copy-beside-device (split) layouts** — at 1.0 the device fills
+  the full width, so copy only fits above/below it. e.g. `--scale 0.6` for a device that
+  occupies ~60% width with room for a column of copy alongside.
+- Output is a transparent PNG at `--width`×`--height` (default 1290×2796), **plus a
+  `<out>.json` sidecar** — read it (next section), it makes placement exact.
 
 ### B. Design the stage (`render.py`) — bespoke, per app
 
@@ -139,9 +151,19 @@ python3 "$SKILL_DIR/render.py" screenshots/*.html --out-dir screenshots/final \
   **inspiration, not molds** — do not copy one and swap words; design for your app.
 - **Author at real pixels for the exact canvas** — there is no shared scale. A 1290-wide
   iPhone shot and a 1080-wide Play shot are laid out independently.
+- **Place copy deterministically from the sidecar — don't eyeball it.** Read the
+  `<device>.json` that `render_phone.py` wrote. `device:{x,y,w,h}` is the device's exact
+  pixel box in the PNG; `image:{w,h}` is the PNG size. Put headlines/callouts in the CLEAR
+  area and keep them off that box (or overlap it *deliberately*, e.g. a breakout). At
+  `--scale 1.0` the device fills the width, so the clear area is the bands **above/below**
+  the box — headline-top, device-below (the classic hero). For **copy beside the device**,
+  render with `--scale 0.6`-ish so a side gutter opens up.
 - **Place the device** with `<img src="dev-01.png">` (render.py inlines local images;
-  relative paths resolve from the fragment's folder). Give it a `drop-shadow` filter to
-  ground it. Angle, crop, bleed off an edge — whatever the composition wants.
+  relative paths resolve from the fragment's folder). Simplest: a full-bleed layer
+  (`position:absolute; inset:0; width:100%`) so the device lands exactly where the JSON
+  says (box in PNG px = box on the stage, 1:1). If you `transform: translate()/scale()` the
+  image to reposition it, apply the SAME transform to the box to know where the device
+  ends up. Give it a `drop-shadow` filter to ground it; bleed off an edge freely.
 - **Consistency comes from the shared visual system you defined** (palette, type
   treatment, margins, motif) — *not* from a shared layout. Vary the composition per shot.
 - Show finals to the user with the Read tool, gather feedback, **edit the CSS (or re-run A

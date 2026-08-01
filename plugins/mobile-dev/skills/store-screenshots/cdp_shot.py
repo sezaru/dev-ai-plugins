@@ -107,6 +107,11 @@ def capture(chromium, url, out_path, w, h, transparent=False, ready_timeout=40):
         cdp = _CDP(_ws_connect(page_ws))
         cdp.call("Page.enable")
         cdp.call("Runtime.enable")
+        # Pin the viewport to exactly w×h. Headless window.innerHeight lands ~180px short of
+        # --window-size, so without this the page (and its WebGL canvas) is shorter than the
+        # captured clip — the render doesn't fill the image and any pixel maths is off.
+        cdp.call("Emulation.setDeviceMetricsOverride",
+                 width=w, height=h, deviceScaleFactor=1, mobile=False)
         if transparent:
             cdp.call("Emulation.setDefaultBackgroundColorOverride",
                      color={"r": 0, "g": 0, "b": 0, "a": 0})
@@ -119,10 +124,18 @@ def capture(chromium, url, out_path, w, h, transparent=False, ready_timeout=40):
             time.sleep(0.15)
         else:
             print("WARN: __READY never set, capturing anyway", file=sys.stderr)
+        meta = None
+        try:
+            mv = cdp.call("Runtime.evaluate", expression="JSON.stringify(window.__META||null)",
+                          returnByValue=True).get("result", {}).get("value")
+            meta = json.loads(mv) if mv else None
+        except Exception:
+            pass
         shot = cdp.call("Page.captureScreenshot", format="png",
                         clip={"x": 0, "y": 0, "width": w, "height": h, "scale": 1})
         with open(out_path, "wb") as f:
             f.write(base64.b64decode(shot["data"]))
+        return meta
     finally:
         proc.terminate()
         try:

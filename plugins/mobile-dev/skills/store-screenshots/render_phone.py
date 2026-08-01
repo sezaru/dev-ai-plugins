@@ -18,9 +18,18 @@ any scene.gltf/.glb with a separable screen mesh.
 
 Chromium binary: $CHROMIUM_BIN, else chromium / chromium-browser / google-chrome on PATH.
 """
-import argparse, os, pathlib, shutil, sys, urllib.request
+import argparse, json, os, pathlib, shutil, struct, sys, urllib.request
 
 import cdp_shot
+
+
+def png_size(path):
+    """(width, height) of a PNG from its IHDR — avoids a Pillow dependency."""
+    with open(path, "rb") as f:
+        head = f.read(24)
+    if head[:8] != b"\x89PNG\r\n\x1a\n":
+        return None
+    return struct.unpack(">II", head[16:24])
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODELS = os.path.join(HERE, "assets", "models")
@@ -63,6 +72,9 @@ def main():
     p.add_argument("--orient", choices=("portrait", "landscape"), default="portrait",
                    help="device orientation (landscape rolls it 90° — for tablets); feed a "
                         "landscape screenshot when using landscape")
+    p.add_argument("--scale", type=float, default=1.0,
+                   help="how much of the frame the device fills (1.0 = fill width; <1 leaves "
+                        "gutters for copy beside it, e.g. 0.6 for a split layout)")
     p.add_argument("--width", type=int, default=1290)
     p.add_argument("--height", type=int, default=2796)
     args = p.parse_args()
@@ -73,11 +85,29 @@ def main():
     chromium = find_chromium()
 
     q = (f"?model={file_url(model)}&shot={file_url(args.screenshot)}"
-         f"&yaw={args.yaw}&pitch={args.pitch}&orient={args.orient}&bg=none")
+         f"&yaw={args.yaw}&pitch={args.pitch}&orient={args.orient}&scale={args.scale}&bg=none")
     url = file_url(TEMPLATE) + q
-    cdp_shot.capture(chromium, url, os.path.abspath(args.out),
-                     args.width, args.height, transparent=True)
+    meta = cdp_shot.capture(chromium, url, os.path.abspath(args.out),
+                            args.width, args.height, transparent=True)
     print(f"✓ {args.out} ({args.width}x{args.height}, model={os.path.basename(os.path.dirname(model))})")
+
+    if meta:
+        side = os.path.splitext(os.path.abspath(args.out))[0] + ".json"
+        with open(side, "w") as f:
+            json.dump(meta, f, indent=2)
+        d = meta.get("device", {})
+        print(f"  device box: x={d.get('x')} y={d.get('y')} w={d.get('w')} h={d.get('h')}  "
+              f"(place copy clear of this box) → {os.path.basename(side)}")
+        # warn if the screenshot's aspect doesn't match the screen — the source of stretch/bars
+        exp = meta.get("screen_aspect")
+        sz = png_size(args.screenshot)
+        if exp and sz:
+            got = sz[0] / sz[1]
+            if abs(got / exp - 1) > 0.03:
+                ideal_w = round(sz[1] * exp)
+                print(f"  ⚠ screenshot aspect {got:.3f} ≠ screen {exp:.3f} — it will be stretched. "
+                      f"Recapture at ~{ideal_w}×{sz[1]} (or any {exp:.3f} ratio) to fit cleanly.",
+                      file=sys.stderr)
 
 
 if __name__ == "__main__":
