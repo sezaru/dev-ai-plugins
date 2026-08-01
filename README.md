@@ -12,14 +12,38 @@ Not intended for public distribution.
 More to come (e.g. `elixir-dev` for backend) — each is a self-contained, independently
 installable plugin under `plugins/`.
 
-## Install (local)
+## Install
 
-Add this repo as a marketplace, then install the plugins you want:
+First add this repo as a marketplace (once), then install the plugins for your stack.
 
 ```
 /plugin marketplace add /home/sezdocs/projects/dev-ai-plugins
-/plugin install mobile-dev@dev-ai-plugins
 ```
+
+(Or point at the remote instead of a local path once it's hosted, e.g.
+`/plugin marketplace add <owner>/dev-ai-plugins`.)
+
+### Per environment
+
+Each development environment installs our plugin **plus** any third-party plugins that
+pair with it. We don't vendor or re-export third-party plugins — install them from their
+own marketplace so they stay current.
+
+#### Flutter (iOS / Android)
+
+Our `mobile-dev` plugin, alongside the official Flutter agent skills
+([`flutter/skills`](https://github.com/flutter/skills), BSD-3-Clause):
+
+```
+/plugin install mobile-dev@dev-ai-plugins
+
+/plugin marketplace add flutter/skills
+/plugin install flutter@flutter-skills
+```
+
+`mobile-dev` also ships a `PreToolUse` hook that blocks unbounded `flutter run` /
+`adb logcat` from flooding the conversation — it activates automatically once the plugin
+is enabled (needs `jq` on PATH; see [Dependencies](#dependencies-nix-flake)).
 
 ## Layout
 
