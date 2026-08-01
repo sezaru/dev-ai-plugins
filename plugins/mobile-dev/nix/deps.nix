@@ -8,4 +8,7 @@ pkgs: [
   # captured over the DevTools protocol by cdp_shot.py). No image-generation API.
   pkgs.python3
   pkgs.chromium
+  # guard-log-commands hook (hooks/): parses the PreToolUse payload with jq. The hook
+  # fails open (allows everything) if jq is missing, so this keeps the guard live.
+  pkgs.jq
 ]
