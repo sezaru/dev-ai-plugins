@@ -13,5 +13,5 @@ pkgs: [
   pkgs.jq
   # app-demand-scout: single-file Elixir scripts (scout/review_miner/aso_generator/…) that
   # fetch live App Store/Play/review/trends data. First run pulls `req` via Mix.install.
-  pkgs.elixir
+  pkgs.beamPackages.elixir
 ]
