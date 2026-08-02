@@ -11,4 +11,7 @@ pkgs: [
   # guard-log-commands hook (hooks/): parses the PreToolUse payload with jq. The hook
   # fails open (allows everything) if jq is missing, so this keeps the guard live.
   pkgs.jq
+  # app-demand-scout: single-file Elixir scripts (scout/review_miner/aso_generator/…) that
+  # fetch live App Store/Play/review/trends data. First run pulls `req` via Mix.install.
+  pkgs.elixir
 ]
