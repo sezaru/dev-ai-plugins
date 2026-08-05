@@ -61,6 +61,17 @@ dropping it**.
 | `scout.exs` | keyword-gap scan: demand proxy + weak-incumbent score, open vs walled | `--seeds file.txt` or inline terms · `--limit 12 --out r.csv --llm-prompt gap.md` |
 | `aso_generator.exs` | build/validate Title/Subtitle/keyword-field (Apple rules), pure/offline | `--pack --keyword "..." --exclude "..."` · `--check-title "..."` |
 
+**Real search demand (optional, credit-free — needs a logged-in AppFigures browser session):**
+| script | job | key flags |
+|---|---|---|
+| `af_auto.mjs` | **real Apple Search Ads popularity** + competitiveness per seed, via CDP over the logged-in AppFigures dashboard (add competitor → track → poll → read → cleanup). Replaces `scout.exs`'s fake proxy. | `--store-id N` or `--product-id N` · `--country us` · `--keywords "a,b"` or `--seeds f` · `--out r.csv` · `--keep` |
+
+Needs Chromium on `--remote-debugging-port=9222` logged into a Monitor+/trial account, and
+`npm i playwright-core` in `scripts/`. See `SAAS_OPTIONS.md` for the full contract + the
+`af_scout.exs`/`af_pain.exs` public-API+credits (headless) alternative. Use it to confirm the
+`scout.exs` open gaps have *real* search volume before a BUILD — audience-qualified long-tail
+(`X for parents/seniors`) is usually popularity-floor (≈5); demand sits on the generic head.
+
 **Downstream generators (pure, offline — no network, always work):**
 | `seo_page.exs` | landing / fake-door page (SEO meta + JSON-LD + CTA/waitlist) |
 | `tiktok_scripter.exs` | TikTok hooks + LLM generation prompt for free creative testing |

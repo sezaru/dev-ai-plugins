@@ -54,6 +54,30 @@ elixir review_miner.exs --term "pet health record" --apps 5 --pages 6 --max-star
 elixir review_miner.exs --ids 631377773,955252538 --llm-prompt pain.md
 ```
 
+### Real search demand (optional) — `af_auto.mjs`
+
+`scout.exs`'s `demand_proxy_ratings` is a lagging proxy (total ratings of ranking apps),
+inflated by giants with big install bases but little search. `af_auto.mjs` replaces it with
+**real Apple Search Ads popularity** (0–100) + competitiveness, pulled from AppFigures — and it
+does the whole thing **credit-free** by driving your already-logged-in AppFigures dashboard
+session over the Chrome DevTools Protocol: resolve a competitor app → track your seeds → poll
+until popularity populates → read → clean up (untrack + remove), freeing your keyword slots.
+
+```bash
+# Chromium must be running with remote debugging + logged into appfigures.com (Monitor+/trial):
+#   chromium --remote-debugging-port=9222 --user-data-dir=/tmp/af-cdp-profile https://appfigures.com
+npm i playwright-core     # once, in scripts/
+node af_auto.mjs --store-id 573916946 --country us \
+  --keywords "pill reminder,medication reminder simple,caregiver medication" --out demand.csv
+```
+
+Needs a **live logged-in browser** (not headless) and a plan that shows Keyword Popularity. See
+**`SAAS_OPTIONS.md`** for the full analysis, the internal-API contract, run-cost/plan math, and
+the **`af_scout.exs` / `af_pain.exs`** alternative (public API + prepaid credits — headless/CI-
+friendly, but competitor data costs credits). **Recurring finding:** audience-qualified long-tail
+terms (`X for parents/seniors/family`) tend to be popularity-floor (≈5) — real demand sits on the
+generic head; the ratings proxy overstates the niche terms.
+
 **`aso_generator.exs`** — ASO metadata builder + validator (pure, offline). Encodes Apple's
 rules people get wrong: no spaces in the keyword field, each word once, never repeat
 title/subtitle words.
