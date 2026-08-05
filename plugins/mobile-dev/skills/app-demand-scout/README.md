@@ -107,6 +107,19 @@ the wedge. **Seed cleanly** — ambiguous seeds contaminate (`pill tracker` pull
 "trackers"); **one focused space per run** (broad multi-domain seeds dilute the clusters).
 These are demand *terms*, not the wedge — `review_miner.exs` still supplies the product insight.
 
+**Discovery ledger** (so repeat runs *widen* instead of re-finding the same market): keep a
+persistent `~/app-demand-runs/discovered.md` of covered markets + the incumbent `product_id`s
+each run mined (the run prints them under "apps mined"). Feed those ids back on the next run:
+
+```bash
+node af_discover.mjs --seed-keywords "sleep tracker" --exclude-apps 213422935,214104401 ...
+node af_discover.mjs --seed-keywords "sleep tracker" --exclude-file ~/app-demand-runs/ledger-ids.txt ...
+```
+
+Excluded apps are dropped before keyword-fetching, and the LLM also drops any candidate cluster
+that matches a ledger market by meaning (a new app the id-list missed still means "already
+covered"). See `SKILL.md` for the full before/after-run gate.
+
 **`aso_generator.exs`** — ASO metadata builder + validator (pure, offline). Encodes Apple's
 rules people get wrong: no spaces in the keyword field, each word once, never repeat
 title/subtitle words.

@@ -53,6 +53,13 @@ const country = opt('country', 'us').toLowerCase();
 let seedKeywords = list(opt('seed-keywords'));
 const seedStoreIds = list(opt('seed-apps'));
 const productIds = list(opt('product-ids')).map(Number);
+// Discovery ledger: product_ids already mined in a past run (BP incumbents, etc.). Excluded
+// before keyword-fetching so a later run doesn't re-surface an already-covered market. Accepts
+// a comma list and/or --exclude-file (one product_id per line).
+let excludeApps = list(opt('exclude-apps')).map(Number);
+if (opt('exclude-file')) excludeApps = excludeApps.concat(
+  readFileSync(opt('exclude-file'), 'utf8').split('\n').map(s => s.trim()).filter(s => s && !s.startsWith('#')).map(Number));
+excludeApps = [...new Set(excludeApps.filter(Boolean))];
 if (opt('seeds')) seedKeywords = seedKeywords.concat(
   readFileSync(opt('seeds'), 'utf8').split('\n').map(s => s.trim()).filter(s => s && !s.startsWith('#')));
 const topApps = Number(opt('top-apps', '8'));
@@ -106,7 +113,8 @@ async function run() {
 
   // ---- gather: apps + their ranked keywords (all in-page, same-origin session) ----
   const gathered = await page.evaluate(async (args) => {
-    const { seedKeywords, seedStoreIds, productIds, country, topApps, pages, tok } = args;
+    const { seedKeywords, seedStoreIds, productIds, country, topApps, pages, tok, excludeApps } = args;
+    const excludeSet = new Set(excludeApps);
     const H = { accept: 'application/json', 'x-requested-with': 'XMLHttpRequest', 'x-st': tok };
     const jget = async (path) => { const r = await fetch(path, { headers: H }); let d = null; try { d = await r.json(); } catch {} return { status: r.status, d }; };
     const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -115,7 +123,7 @@ async function run() {
     // app map: product_id -> { name, downloads, revenue }
     const apps = new Map();
     const addApp = (pid, name, dl, rev) => {
-      if (!pid) return;
+      if (!pid || excludeSet.has(pid)) return; // ledger: skip already-mined incumbents
       const cur = apps.get(pid) || { product_id: pid, name: name || null, downloads: dl ?? null, revenue: rev ?? null };
       if (name && !cur.name) cur.name = name;
       if (dl != null && cur.downloads == null) cur.downloads = dl;
@@ -187,7 +195,8 @@ async function run() {
       await sleep(150);
     }
     return { log, apps: [...apps.values()], rows };
-  }, { seedKeywords, seedStoreIds, productIds, country, topApps, pages, tok });
+  }, { seedKeywords, seedStoreIds, productIds, country, topApps, pages, tok, excludeApps });
+  if (excludeApps.length) console.error(`ledger: excluding ${excludeApps.length} already-mined app(s)`);
 
   console.error('\n' + gathered.log.join('\n'));
   if (!gathered.rows.length) { console.error('No keyword rows gathered.'); await browser.close(); process.exit(1); }
@@ -251,6 +260,8 @@ async function run() {
   await browser.close();
 
   // ---- output ----
+  console.log(`\n--- apps mined (record product_ids in the discovery ledger for --exclude-apps) ---`);
+  console.log(gathered.apps.map(a => `${a.product_id} ${a.name || '?'}`).join('\n'));
   console.log(`\n=== ${country.toUpperCase()} candidate markets — ${cands.length} terms from ${gathered.apps.length} apps ===`);
   console.log('gap  pop  comp  rank  ranked  keyword' + (enrichN > 0 ? '   [leaderDL/leaderRev]' : ''));
   for (const c of cands.slice(0, 40)) {

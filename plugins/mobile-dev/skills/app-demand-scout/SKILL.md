@@ -65,7 +65,7 @@ dropping it**.
 | script | job | key flags |
 |---|---|---|
 | `af_auto.mjs` | **real Apple Search Ads popularity** + competitiveness per seed, via CDP over the logged-in AppFigures dashboard (add competitor → track → poll → read → cleanup). Replaces `scout.exs`'s fake proxy. | `--store-id N` or `--product-id N` · `--country us` · `--keywords "a,b"` or `--seeds f` · `--out r.csv` · `--keep` |
-| `af_discover.mjs` | **DISCOVER mode candidate generator** — inverts the skill: from a seed term/app it pulls the real incumbents (`unified-apps/search`, with download+revenue estimates), reads **every keyword they genuinely rank for** (`products-snapshot/keywords`, filtered to organic rank ≤ N so it's their real market, not brand noise), and ranks the pool by demand × openness. The data nominates markets. Credit-free, no tracking, no cleanup. | `--seed-keywords "a,b"` or `--seed-apps id,id` or `--product-ids pid,pid` · `--country us` · `--top-apps 6 --pages 4 --max-position 20` · `--enrich 25` · `--out c.csv --llm-prompt disc.md` |
+| `af_discover.mjs` | **DISCOVER mode candidate generator** — inverts the skill: from a seed term/app it pulls the real incumbents (`unified-apps/search`, with download+revenue estimates), reads **every keyword they genuinely rank for** (`products-snapshot/keywords`, filtered to organic rank ≤ N so it's their real market, not brand noise), and ranks the pool by demand × openness. The data nominates markets. Credit-free, no tracking, no cleanup. | `--seed-keywords "a,b"` or `--seed-apps id,id` or `--product-ids pid,pid` · `--country us` · `--top-apps 6 --pages 4 --max-position 20` · `--enrich 25` · `--exclude-apps id,id` / `--exclude-file f` (ledger) · `--out c.csv --llm-prompt disc.md` |
 
 Needs Chromium on `--remote-debugging-port=9222` logged into a Monitor+/trial account, and
 `npm i playwright-core` in `scripts/`. See `SAAS_OPTIONS.md` for the full contract + the
@@ -134,6 +134,25 @@ downloads/revenue modest, not a funded giant), and pick the 2–3 strongest to t
 review-mining below. These are demand *terms*, not the wedge — the wedge still comes from the
 complaints. Seed cleanly: ambiguous seeds contaminate (`pill tracker` pulls in gaming
 "trackers"). No session? Skip to review-mining with a domain term as before.
+
+**Discovery ledger — don't re-discover the same market.** `af_discover` is stateless; without
+memory it will happily re-surface a market you already worked (BP logging, med adherence, …)
+on the next run. Maintain a persistent ledger at `~/app-demand-runs/discovered.md` and treat it
+as a hard gate:
+1. **Before** a discovery run, read it. It lists each covered market: a name, the seed used, the
+   verdict, and the incumbent **product_ids** that were mined.
+2. Pass those product_ids to `af_discover --exclude-apps 213422935,214104401,...` (or
+   `--exclude-file ledger-ids.txt`) so the already-mined incumbents are dropped *before*
+   keyword-fetching — the fastest way a covered market re-appears is the same incumbents.
+3. **When clustering the output**, additionally drop any candidate cluster that matches a
+   ledger market by *meaning*, not just by app id (a brand-new BP app the exclude list didn't
+   catch still means "BP logging — already covered"). Say so in the run notes.
+4. **After** you settle the verdict, append the new market(s) to the ledger — name, seed,
+   verdict, and the `product_id name` lines the run prints under "apps mined". Create the file
+   if missing.
+
+This is what turns the skill from "validate one idea" into a *widening* search that never spends
+a run re-finding what you already know.
 
 Run `review_miner.exs` on the category's incumbents. In **discover** mode, pick a broad
 term for the domain; in **evaluate** mode, use the app's category term. Example:
