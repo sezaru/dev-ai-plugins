@@ -78,6 +78,35 @@ friendly, but competitor data costs credits). **Recurring finding:** audience-qu
 terms (`X for parents/seniors/family`) tend to be popularity-floor (≈5) — real demand sits on the
 generic head; the ratings proxy overstates the niche terms.
 
+### Discover new markets (optional) — `af_discover.mjs`
+
+`scout.exs`/`af_auto.mjs` answer *"is there demand for this idea?"* — you still have to name
+the idea. `af_discover.mjs` inverts that: give it a **seed term or a competitor app** and it
+lets the data nominate markets. It drives the same logged-in AppFigures session over CDP
+(credit-free, no tracking, no cleanup) to:
+
+1. `unified-apps/search` → the real incumbent apps for the seed, **with download + revenue
+   estimates** (market size + who's winning),
+2. `aso/products-snapshot/keywords` → **every keyword each incumbent genuinely ranks for**
+   (organic rank ≤ `--max-position`, so it's their real market — not every word Apple indexes
+   them against, which is how brand noise like `starbucks`/`fortnite` sneaks in),
+3. aggregate across apps (a term many incumbents rank for = relevant), score by **demand
+   (popularity) × openness (low competitiveness)**, and emit a ranked candidate CSV + a
+   clustering prompt.
+
+```bash
+# same prereq as af_auto.mjs: Chromium on :9222, logged into appfigures.com (Monitor+/trial)
+node af_discover.mjs --seed-keywords "blood pressure,hypertension" --country us \
+  --top-apps 7 --pages 4 --max-position 20 --enrich 30 --out candidates.csv --llm-prompt disc.md
+node af_discover.mjs --seed-apps 573916946 --pages 6 --out candidates.csv   # seed from a known app
+```
+
+Then the LLM (in-conversation) clusters the survivors into candidate markets, strips
+single-brand/foreign/tangential-giant terms, and picks the 2–3 strongest to review-mine for
+the wedge. **Seed cleanly** — ambiguous seeds contaminate (`pill tracker` pulls in gaming
+"trackers"); **one focused space per run** (broad multi-domain seeds dilute the clusters).
+These are demand *terms*, not the wedge — `review_miner.exs` still supplies the product insight.
+
 **`aso_generator.exs`** — ASO metadata builder + validator (pure, offline). Encodes Apple's
 rules people get wrong: no spaces in the keyword field, each word once, never repeat
 title/subtitle words.
@@ -143,6 +172,9 @@ elixir trends.exs --terms "pet vaccine tracker,cat health record" --time "today 
 ## The pipeline
 
 ```
+NOMINATE CANDIDATE MARKETS (discover mode, optional — needs AppFigures session)
+  af_discover.mjs    → seed term/app → ranked real-demand terms   [session]
+    ↓ LLM clusters candidates → markets → pick 2–3 to mine
 DISCOVER THE WEDGE
   review_miner.exs   → incumbents' 1–3★ complaints (iOS RSS)   [core]
   reddit_miner.exs   → community pain the store can't see       [optional]

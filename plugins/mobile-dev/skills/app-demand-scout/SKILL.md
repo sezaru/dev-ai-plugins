@@ -65,6 +65,7 @@ dropping it**.
 | script | job | key flags |
 |---|---|---|
 | `af_auto.mjs` | **real Apple Search Ads popularity** + competitiveness per seed, via CDP over the logged-in AppFigures dashboard (add competitor → track → poll → read → cleanup). Replaces `scout.exs`'s fake proxy. | `--store-id N` or `--product-id N` · `--country us` · `--keywords "a,b"` or `--seeds f` · `--out r.csv` · `--keep` |
+| `af_discover.mjs` | **DISCOVER mode candidate generator** — inverts the skill: from a seed term/app it pulls the real incumbents (`unified-apps/search`, with download+revenue estimates), reads **every keyword they genuinely rank for** (`products-snapshot/keywords`, filtered to organic rank ≤ N so it's their real market, not brand noise), and ranks the pool by demand × openness. The data nominates markets. Credit-free, no tracking, no cleanup. | `--seed-keywords "a,b"` or `--seed-apps id,id` or `--product-ids pid,pid` · `--country us` · `--top-apps 6 --pages 4 --max-position 20` · `--enrich 25` · `--out c.csv --llm-prompt disc.md` |
 
 Needs Chromium on `--remote-debugging-port=9222` logged into a Monitor+/trial account, and
 `npm i playwright-core` in `scripts/`. See `SAAS_OPTIONS.md` for the full contract + the
@@ -96,7 +97,10 @@ Ask which the user wants (or infer from `$ARGUMENTS`):
 
 - **Discover** — start from a *domain or audience* (e.g. "pet care", "caregivers"), find a
   market. Input is a rough area; you find the gap. **You do not need keywords up front** —
-  they come *out of* the review-mining in Phase 2.
+  they come *out of* the review-mining in Phase 2. If an AppFigures session is available,
+  front-load this with `af_discover.mjs` (a seed term/app → a ranked field of real demand
+  terms the incumbents rank for, with download/revenue estimates) so the *data* nominates
+  candidate markets before you commit to one — then cluster + review-mine the survivors.
 - **Evaluate** — start from an *app the user already has* (a project directory). Read its
   code/docs to understand what it does and who it's for, then run the same pipeline against
   its category to grade it BUILD / MAYBE / KILL.
@@ -111,6 +115,25 @@ Ask which the user wants (or infer from `$ARGUMENTS`):
 Confirm the scratch output directory (SETUP). Then continue.
 
 ## PHASE 2 — Discover the wedge (review-mining)
+
+**Discover mode, first (if an AppFigures session is up): let the data nominate the market.**
+Before committing to one broad term, run `af_discover.mjs` from a seed term (or a competitor
+app) to get a ranked field of real demand terms the incumbents actually rank for:
+
+```bash
+node "$SKILL_DIR/scripts/af_discover.mjs" --seed-keywords "symptom tracker,blood pressure log" \
+  --country us --top-apps 6 --pages 4 --max-position 20 --enrich 25 \
+  --out candidates.csv --llm-prompt candidates.md
+```
+
+Then **cluster** the output yourself (the `--llm-prompt` file drives this): group terms into
+4–8 candidate markets, **strip** single-brand/entity and foreign terms and tangential-giant
+artifacts (an app ranking for a word ≠ that word being its market), judge each on real demand
+(popularity on the head term) × beatable defense (competitiveness not maxed; leader
+downloads/revenue modest, not a funded giant), and pick the 2–3 strongest to take into
+review-mining below. These are demand *terms*, not the wedge — the wedge still comes from the
+complaints. Seed cleanly: ambiguous seeds contaminate (`pill tracker` pulls in gaming
+"trackers"). No session? Skip to review-mining with a domain term as before.
 
 Run `review_miner.exs` on the category's incumbents. In **discover** mode, pick a broad
 term for the domain; in **evaluate** mode, use the app's category term. Example:

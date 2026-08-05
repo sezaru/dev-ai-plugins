@@ -1,7 +1,7 @@
 {
   "name": "mobile-dev",
   "description": "Flutter-based iOS & Android app development: skills, code guidelines, and MCP servers.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": {
     "name": "Eduardo Barreto Alexandre",
     "email": "claude@sezdm.com"
