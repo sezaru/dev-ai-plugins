@@ -1,0 +1,18 @@
+{
+  "name": "dev-ai-plugins",
+  "owner": {
+    "name": "Eduardo Barreto Alexandre",
+    "email": "claude@sezdm.com"
+  },
+  "metadata": {
+    "description": "dev-workflow: a provider- and language-neutral agentic development workflow plugin for Claude Code.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "dev-workflow",
+      "source": "./plugins/dev-workflow",
+      "description": "Provider- and language-neutral agentic workflow: feature/refactor/bugfix playbooks, a fresh-context reviewer subagent, and a deterministic verify gate that blocks turn-end on failing checks."
+    }
+  ]
+}

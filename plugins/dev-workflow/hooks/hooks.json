@@ -1,0 +1,29 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/verify-gate.sh\"",
+            "timeout": 300,
+            "statusMessage": "Running verify gate"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-commit.sh\"",
+            "timeout": 300,
+            "statusMessage": "Verifying before commit"
+          }
+        ]
+      }
+    ]
+  }
+}

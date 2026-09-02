@@ -1,0 +1,9 @@
+{
+  "name": "dev-workflow",
+  "description": "Provider- and language-neutral agentic development workflow: feature/refactor/bugfix playbooks, a fresh-context reviewer subagent, and a deterministic verify gate that blocks turn-end on failing checks.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Eduardo Barreto Alexandre",
+    "email": "claude@sezdm.com"
+  }
+}
